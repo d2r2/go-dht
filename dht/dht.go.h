@@ -203,7 +203,7 @@ static int gpio_read_seq_until_timeout(Pin *pin,
     return 0;
 }
  
-// Set up specifi pin signal to 0 (low) or 1 (high).
+// Set up specific pin level to 0 (low) or 1 (high).
 static int gpio_write(Pin *pin, int value) {
     static const char s_values_str[] = "01";
          
@@ -336,7 +336,5 @@ static int dial_DHTxx_and_read(int pin, int32_t **arr, int32_t *arr_len) {
     // Return normal thread priority.
     return set_default_priority();
 }
-
-
 
 #endif

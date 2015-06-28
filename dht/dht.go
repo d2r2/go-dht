@@ -28,7 +28,7 @@ func dialDHTxxAndGetResponse(pin int) (error, []Pulse) {
 	var arr *C.int32_t
 	var arrLen C.int32_t
 	var l []int32
-	// return array: [edge, duration, edge, duration...]
+	// return array: [pulse, duration, pulse, duration, ...]
 	r := C.dial_DHTxx_and_read(4, &arr, &arrLen)
 	if r == -1 {
 		return fmt.Errorf("Error found in call to C.dial_DHTxx_and_read(...)"), nil
@@ -39,7 +39,8 @@ func dialDHTxxAndGetResponse(pin int) (error, []Pulse) {
 	h.Len = int(arrLen)
 	h.Cap = int(arrLen)
 	pulses := make([]Pulse, len(l)/2)
-	// convert original array ([edge, duration...]) to edge list
+	// convert original int array ([pulse, duration, pulse, duration, ...])
+	// to Pulse struct array
 	for i := 0; i < len(l)/2; i++ {
 		pulses[i] = Pulse{Value: l[i*2] != 0,
 			Duration: time.Duration(l[i*2+1]) * time.Microsecond}
@@ -49,7 +50,7 @@ func dialDHTxxAndGetResponse(pin int) (error, []Pulse) {
 
 func decodeByte(pulses []Pulse, start int) (error, int) {
 	if len(pulses)-start < 16 {
-		return fmt.Errorf("Can't decode byte, since range beetwen "+
+		return fmt.Errorf("Can't decode byte, since range between "+
 			"index and array length is less than 16: %d, %d", start, len(pulses)), 0
 	}
 	var b int = 0
@@ -64,7 +65,7 @@ func decodeByte(pulses []Pulse, start int) (error, int) {
 		}
 		const HIGH_DUR_MAX = (70 + (70 + 54)) / 2 * time.Microsecond
 		// Calc average value between 24us (bit 0) and 70us (bit 1).
-		// Everything that less this parameter is 0, bigger - 1.
+		// Everything that less than this param is bit 0, bigger - bit 1.
 		const HIGH_DUR_AVG = (24 + (70-24)/2) * time.Microsecond
 		if pulseH.Duration > HIGH_DUR_MAX {
 			return fmt.Errorf("High edge value duration exceed "+
@@ -78,36 +79,45 @@ func decodeByte(pulses []Pulse, start int) (error, int) {
 	return nil, b
 }
 
+// Decode bunch of pulse read from DHTxx sensors.
+// Use pdf description from /docs to read 5 bytes and
+// convert them to temperature and humidity.
 func decodeDHT11Pulses(pulses []Pulse) (err error, temp float32, hum float32) {
 	if len(pulses) == 84 {
 		pulses = pulses[2:82]
 	} else if len(pulses) == 83 {
 		pulses = pulses[1:81]
 	} else if len(pulses) != 82 {
-		return fmt.Errorf("Can't decode edge array, since incorrect length: %d",
+		return fmt.Errorf("Can't decode pulse array, since incorrect length: %d",
 			len(pulses)), -1, -1
 	}
 	pulses = pulses[:80]
+	// Decode humidity (integer part)
 	err, humInt := decodeByte(pulses, 0)
 	if err != nil {
 		return err, -1, -1
 	}
+	// Decode humidity (decimal part)
 	err, humDec := decodeByte(pulses, 16)
 	if err != nil {
 		return err, -1, -1
 	}
+	// Decode temperature (integer part)
 	err, tempInt := decodeByte(pulses, 32)
 	if err != nil {
 		return err, -1, -1
 	}
+	// Decode temperature (decimal part)
 	err, tempDec := decodeByte(pulses, 48)
 	if err != nil {
 		return err, -1, -1
 	}
+	// Decode control sum to verify all data received from sensor
 	err, sum := decodeByte(pulses, 64)
 	if err != nil {
 		return err, -1, -1
 	}
+	// Produce data verification
 	if byte(sum) != byte(humInt+humDec+tempInt+tempDec) {
 		return fmt.Errorf("Control sum %d doesn't match %d+%d+%d+%d=%d\n",
 			sum, humInt, humDec, tempInt, tempDec,
@@ -118,18 +128,25 @@ func decodeDHT11Pulses(pulses []Pulse) (err error, temp float32, hum float32) {
 	if hum > 100 {
 		return fmt.Errorf("Humidity value exceed 100%: %v", hum), -1, -1
 	}
+	// Success
 	return nil, temp, hum
 }
 
+// Send activation request to DHTxx sensor via 1-pin.
+// Then decode pulses which was sent back with asynchronous
+// protocol specific for DHTxx sensors.
 func ReadDHTxx(sensorType SensorType, pin int) (err error,
 	temperature float32, humidity float32) {
 	err, pulses := dialDHTxxAndGetResponse(pin)
 	if err != nil {
 		return err, -1, -1
 	}
-	for i, pulse := range pulses {
-		fmt.Printf("pulse %d: %v, %v\n", i, pulse.Duration, pulse.Value)
-	}
+	// Uncomment next block for debug purpose.
+	/*
+		for i, pulse := range pulses {
+			fmt.Printf("pulse %d: %v, %v\n", i, pulse.Duration, pulse.Value)
+		}
+	*/
 	err, temp, hum := decodeDHT11Pulses(pulses)
 	if err != nil {
 		return err, -1, -1
@@ -137,6 +154,8 @@ func ReadDHTxx(sensorType SensorType, pin int) (err error,
 	return nil, temp, hum
 }
 
+// Read temperature (in celcius) and humidity (in percents)
+// from DHTxx sensors. Retry n times in case of failure.
 func ReadAndRetryDHTxx(sensorType SensorType, pin int, retry int) (err error,
 	temperature float32, humidity float32) {
 	var retryUsed int = 0
@@ -147,6 +166,7 @@ func ReadAndRetryDHTxx(sensorType SensorType, pin int, retry int) (err error,
 			if retry > 0 {
 				retry--
 				retryUsed++
+				// Sleep before new attempt
 				time.Sleep(1500 * time.Millisecond)
 				continue
 			}
