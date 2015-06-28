@@ -158,12 +158,3 @@ func ReadAndRetryDHTxx(sensorType SensorType, pin int, retry int) (err error,
 		return nil, temp, hum
 	}
 }
-
-func main() {
-	C.blink_n_times(25, 5)
-	err, temp, hum := ReadAndRetryDHTxx(DHT11, 4, 10)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Printf("Temperature = %v*C, Humidity = %v%%\n", temp, hum)
-}
