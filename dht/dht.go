@@ -45,6 +45,7 @@ func dialDHTxxAndGetResponse(pin int) (error, []Pulse) {
 		pulses[i] = Pulse{Value: l[i*2] != 0,
 			Duration: time.Duration(l[i*2+1]) * time.Microsecond}
 	}
+	time.
 	return nil, pulses
 }
 
