@@ -3,6 +3,7 @@
 DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11 (1).pdf)), DHT22 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT22.pdf)) sensors are quite popular among Adruiono, Raspbery PI and their counterparts developers (here you will find comparision [DHT11 vs DHT22](https://raw.github.com/d2r2/go-dht/master/docs/dht.pdf)).
 They are cheap and affordable. So here is a code which give you at the output temprature and humidity (make all necessary signal handling inside).
 
+
 ## Golang usage
 
 ```go
@@ -33,6 +34,8 @@ There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadAndRetryD
 They both do exactly same things - activate sensor and read and decode temperature and humidity.
 Retry parameter - the only thing which distinguish one from another.
 Nonetheless it's highly recomended to utilize ```ReadAndRetryDHTxx(...)```, since sensor asynchronouse protocol is not very stable causing errors time to time.
+
+This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It may works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device present in /dev/ list.
 
 ## License
 
