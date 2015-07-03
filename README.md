@@ -1,6 +1,6 @@
 ## DHTxx temperature and humidity sensors
 
-DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11 (1).pdf)), DHT22 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT22.pdf)) sensors are quite popular among Adruiono, Raspbery PI and their counterparts developers (here you will find comparision [DHT11 vs DHT22](https://raw.github.com/d2r2/go-dht/master/docs/dht.pdf)).
+DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11 (1).pdf)), DHT22 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT22.pdf)) sensors are quite popular among Arduino, Raspbery PI and their counterparts developers (here you will find comparision [DHT11 vs DHT22](https://raw.github.com/d2r2/go-dht/master/docs/dht.pdf)).
 They are cheap and affordable. So, here is a code which give you at the output temperature and humidity (make all necessary signal handling inside).
 
 ![dht11 and dht22](https://raw.github.com/d2r2/go-dht/master/docs/dht11_dht22.jpg)
