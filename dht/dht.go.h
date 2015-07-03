@@ -215,8 +215,8 @@ static int gpio_write(Pin *pin, int value) {
     return 0;
 }
 
-// Used to set up maximum GPIO processing speed
-// during receiving bunch of data from sensors like DHTxx.
+// Used to gain maximum performance from device during
+// receiving bunch of data from sensors like DHTxx.
 static int set_max_priority(void) {
     struct sched_param sched;
     memset(&sched, 0, sizeof(sched));
