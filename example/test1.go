@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// read sensor data from pin 4, retrying 10 times in case of failure
+	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure
 	err, temperature, humidity := dht.ReadAndRetryDHTxx(dht.DHT11, 4, 10)
 	if err != nil {
 		log.Fatal(err)
