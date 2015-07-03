@@ -36,7 +36,7 @@ They both do exactly same things - activate sensor and read and decode temperatu
 The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadAndRetryDHTxx(...)```.
 So, it's highly recomended to utilize ```ReadAndRetryDHTxx(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt spends 1.5-2 seconds (because according to specification before repeated attempt you should wait 1-2 seconds).
 
-This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device present in /dev/ list.
+This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device available in /dev/ list.
 
 ## License
 
