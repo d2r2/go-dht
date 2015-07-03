@@ -33,7 +33,7 @@ $ go get github.com/d2r2/go-dht/dht
 There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadAndRetryDHTxx(...)```.
 They both do exactly same things - activate sensor and read and decode temperature and humidity.
 Retry parameter - the only thing which distinguish one from another.
-Nonetheless it's highly recomended to utilize ```ReadAndRetryDHTxx(...)```, since sensor asynchronouse protocol is not very stable causing errors time to time.
+Novertheless it's highly recomended to utilize ```ReadAndRetryDHTxx(...)```, since sensor asynchronouse protocol is not very stable causing errors time to time.
 
 This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It may works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device present in /dev/ list.
 
