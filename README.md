@@ -7,6 +7,13 @@ They are cheap and affordable. So here is a code which give you at the output te
 
 ```go
 func main() {
+  // read sensor data from pin 4, retrying 10 times in case of failure
+	err, temperature, humidity := dht.ReadAndRetryDHTxx(dht.DHT11, 4, 10)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// print temrature and humidity
+	fmt.Printf("Temperature = %v*C, Humidity = %v%%\n", temperature, humidity)
 }
 ```
 
