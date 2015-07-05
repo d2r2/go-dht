@@ -41,6 +41,8 @@ So, it's highly recomended to utilize ```ReadDHTxxWithRetry(...)``` with "retry 
 
 This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device available in /dev/ list.
 
+NOTE: Application which use this library should run with root privileges, since C code inside of this library requires it.
+
 ## License
 
 Go-dht is licensed inder MIT License.
