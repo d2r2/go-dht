@@ -8,9 +8,11 @@ import (
 )
 
 func main() {
-	err, temp, hum := dht.ReadAndRetryDHTxx(dht.DHT11, 4, 10)
+	temperature, humidity, retried, err :=
+		dht.ReadDHTxxWithRetry(dht.DHT11, 4, 10)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Temperature = %v*C, Humidity = %v%%\n", temp, hum)
+	fmt.Printf("Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+		temperature, humidity, retried)
 }
