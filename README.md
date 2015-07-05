@@ -29,7 +29,7 @@ GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht/dht)
 ## Installation
 
 ```bash
-$ go get github.com/d2r2/go-dht/dht
+$ go get -u github.com/d2r2/go-dht/dht
 ```
 
 ## Quick tutorial
