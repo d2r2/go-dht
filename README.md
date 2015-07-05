@@ -11,12 +11,14 @@ They are cheap and affordable. So, here is a code written in [Go programming lan
 ```go
 func main() {
 	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure
-	err, temperature, humidity := dht.ReadAndRetryDHTxx(dht.DHT11, 4, 10)
+	temperature, humidity, retried, err :=
+		dht.ReadDHTxxWithRetry(dht.DHT11, 4, 10)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// print temperature and humidity
-	fmt.Printf("Temperature = %v*C, Humidity = %v%%\n", temperature, humidity)
+	fmt.Printf("Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+		temperature, humidity, retried)
 }
 ```
 
@@ -32,10 +34,10 @@ $ go get github.com/d2r2/go-dht/dht
 
 ## Quick tutorial
 
-There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadAndRetryDHTxx(...)```.
+There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadDHTxxWithRetry(...)```.
 They both do exactly same things - activate sensor and read and decode temperature and humidity.
-The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadAndRetryDHTxx(...)```.
-So, it's highly recomended to utilize ```ReadAndRetryDHTxx(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt takes 1.5-2 seconds (according to specification before repeated attempt you should wait 1-2 seconds).
+The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadDHTxxWithRetry(...)```.
+So, it's highly recomended to utilize ```ReadDHTxxWithRetry(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt takes 1.5-2 seconds (according to specification before repeated attempt you should wait 1-2 seconds).
 
 This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device available in /dev/ list.
 
