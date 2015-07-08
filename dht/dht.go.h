@@ -16,6 +16,10 @@
 #define LOW  0
 #define HIGH 1
 
+// TRUE, FALSE values
+#define FALSE 0
+#define TRUE 1
+
 // Keep pin no, file descriptors for data reading/writing
 // and for specifying input/output mode.
 typedef struct {
@@ -283,9 +287,10 @@ static int blink_n_times(int pin, int n) {
 }
 
 // Activate DHTxx sensor and collect data sent by sensor for futher processing.
-static int dial_DHTxx_and_read(int pin, int32_t **arr, int32_t *arr_len) {
+static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
+        int32_t **arr, int32_t *arr_len) {
     // Set maximum priority for GPIO processing.
-    if (-1 == set_max_priority()) {
+    if (boostPerfFlag != FALSE && -1 == set_max_priority()) {
         return -1;
     }
     Pin p;
@@ -323,6 +328,7 @@ static int dial_DHTxx_and_read(int pin, int32_t **arr, int32_t *arr_len) {
     }
     // Read bunch of data from sensor
     // for futher processing in high level language.
+    // Wait for next pulse 10ms maximum.
     if (-1 == gpio_read_seq_until_timeout(&p, 10, arr, arr_len)) {
         gpio_unexport(&p);
         set_default_priority();
@@ -334,7 +340,10 @@ static int dial_DHTxx_and_read(int pin, int32_t **arr, int32_t *arr_len) {
         return -1;
     }
     // Return normal thread priority.
-    return set_default_priority();
+    if (boostPerfFlag != FALSE && -1 == set_default_priority()) {
+        return -1;
+    }
+    return 0;
 }
 
 #endif

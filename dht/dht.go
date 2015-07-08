@@ -20,16 +20,20 @@ const (
 )
 
 type Pulse struct {
-	Value    bool
+	Value    byte
 	Duration time.Duration
 }
 
-func dialDHTxxAndGetResponse(pin int) ([]Pulse, error) {
+func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 	var arr *C.int32_t
 	var arrLen C.int32_t
 	var l []int32
+	var boost C.int32_t = 0
+	if boostPerfFlag {
+		boost = 1
+	}
 	// return array: [pulse, duration, pulse, duration, ...]
-	r := C.dial_DHTxx_and_read(4, &arr, &arrLen)
+	r := C.dial_DHTxx_and_read(4, boost, &arr, &arrLen)
 	if r == -1 {
 		return nil, fmt.Errorf("Error during call C.dial_DHTxx_and_read()")
 	}
@@ -42,7 +46,11 @@ func dialDHTxxAndGetResponse(pin int) ([]Pulse, error) {
 	// convert original int array ([pulse, duration, pulse, duration, ...])
 	// to Pulse struct array
 	for i := 0; i < len(l)/2; i++ {
-		pulses[i] = Pulse{Value: l[i*2] != 0,
+		var value byte = 0
+		if l[i*2] != 0 {
+			value = 1
+		}
+		pulses[i] = Pulse{Value: value,
 			Duration: time.Duration(l[i*2+1]) * time.Microsecond}
 	}
 	return pulses, nil
@@ -57,10 +65,10 @@ func decodeByte(pulses []Pulse, start int) (int, error) {
 	for i := 0; i < 8; i++ {
 		pulseL := pulses[start+i*2]
 		pulseH := pulses[start+i*2+1]
-		if pulseL.Value != false {
+		if pulseL.Value != 0 {
 			return 0, fmt.Errorf("Low edge value expected at index %d", start+i*2)
 		}
-		if pulseH.Value != true {
+		if pulseH.Value == 0 {
 			return 0, fmt.Errorf("High edge value expected at index %d", start+i*2+1)
 		}
 		const HIGH_DUR_MAX = (70 + (70 + 54)) / 2 * time.Microsecond
@@ -139,16 +147,16 @@ func decodeDHT11Pulses(pulses []Pulse) (temperature float32,
 func printPulseArrayForDebug(pulses []Pulse) {
 	fmt.Printf("Pulse count %d:\n", len(pulses))
 	for i, pulse := range pulses {
-		fmt.Printf("\tpulse #%d: %v, %v\n", i, pulse.Duration, pulse.Value)
+		fmt.Printf("\tpulse %3d: %v, %v\n", i, pulse.Value, pulse.Duration)
 	}
 }
 
 // Send activation request to DHTxx sensor via 1-pin.
 // Then decode pulses which was sent back with asynchronous
 // protocol specific for DHTxx sensors.
-func ReadDHTxx(sensorType SensorType, pin int) (temperature float32,
-	humidity float32, err error) {
-	pulses, err := dialDHTxxAndGetResponse(pin)
+func ReadDHTxx(sensorType SensorType, pin int,
+	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
+	pulses, err := dialDHTxxAndGetResponse(pin, boostPerfFlag)
 	if err != nil {
 		return -1, -1, err
 	}
@@ -161,11 +169,11 @@ func ReadDHTxx(sensorType SensorType, pin int) (temperature float32,
 
 // Read temperature (in celcius) and humidity (in percents)
 // from DHTxx sensors. Retry n times in case of failure.
-func ReadDHTxxWithRetry(sensorType SensorType, pin int, retry int) (temperature float32,
-	humidity float32, retried int, err error) {
+func ReadDHTxxWithRetry(sensorType SensorType, pin int, retry int,
+	boostPerfFlag bool) (temperature float32, humidity float32, retried int, err error) {
 	retried = 0
 	for {
-		temp, hum, err := ReadDHTxx(sensorType, pin)
+		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
 		if err != nil {
 			log.Println(err)
 			if retry > 0 {
