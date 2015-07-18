@@ -8,9 +8,11 @@ import (
 )
 
 func main() {
-	// read DHTxx sensor data from pin 4, retrying 10 times in case of failure
+	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
+	// enable "boost GPIO performance" parameter, if your device is old as Raspberry BI 1
+	// (this require root privileges)
 	temperature, humidity, retried, err :=
-		dht.ReadDHTxxWithRetry(dht.DHT22, 4, 10, false)
+		dht.ReadDHTxxWithRetry(dht.DHT22, 4, false, 10)
 	if err != nil {
 		log.Fatal(err)
 	}
