@@ -11,10 +11,10 @@ They are cheap and affordable. So, here is a code written in [Go programming lan
 ```go
 func main() {
 	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
-	// use boost performance, if your device is old as Raspberry BI 1 (this
+	// enable "boost GPIO performance" parameter, if your device is old as Raspberry BI 1 (this
 	// require root privileges)
 	temperature, humidity, retried, err :=
-		dht.ReadDHTxxWithRetry(dht.DHT11, 4, 10, true)
+		dht.ReadDHTxxWithRetry(dht.DHT11, 4, true, 10)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,13 +37,13 @@ $ go get -u github.com/d2r2/go-dht
 ## Quick tutorial
 
 There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadDHTxxWithRetry(...)```.
-They both do exactly same things - activate sensor and read and decode temperature and humidity.
+They both do exactly same thing - activate sensor and read and decode temperature and humidity values.
 The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadDHTxxWithRetry(...)```.
 So, it's highly recomended to utilize ```ReadDHTxxWithRetry(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt takes 1.5-2 seconds (according to specification before repeated attempt you should wait 1-2 seconds).
 
 This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device available in /dev/ list.
 
-NOTE: Application which use this library should run with root privileges, since C code inside requires it. In most cases it is sufficient to add "sudo -E" before "go run ...".
+NOTE: If you enable "boost GPIO performance" parameter, application should run with root privileges, since C code inside requires it. In most cases it is sufficient to add "sudo -E" before "go run ...".
 
 ## License
 
