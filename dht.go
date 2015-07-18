@@ -190,7 +190,7 @@ func printPulseArrayForDebug(pulses []Pulse) {
 // Parameters:
 //   - sensor type: DHT11, DHT22 (aka AM2302).
 //   - pin number from gadget GPIO to interract with sensor.
-//   - boost preformance flag, should be used for old devices
+//   - boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1. Require root privileges.
 func ReadDHTxx(sensorType SensorType, pin int,
 	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
@@ -214,7 +214,7 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // Parameters:
 //   - sensor type: DHT11, DHT22 (aka AM2302).
 //   - pin number from gadget GPIO to interract with sensor.
-//   - boost preformance flag, should be used for old devices
+//   - boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1. Require root privileges.
 //   - how many time to retry until success or сounter to zero
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
