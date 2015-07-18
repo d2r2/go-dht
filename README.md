@@ -10,9 +10,11 @@ They are cheap and affordable. So, here is a code written in [Go programming lan
 
 ```go
 func main() {
-	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure
+	// read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
+	// use boost performance, if you device is old as Raspberry BI 1 (this
+	// require root privileges)
 	temperature, humidity, retried, err :=
-		dht.ReadDHTxxWithRetry(dht.DHT11, 4, 10)
+		dht.ReadDHTxxWithRetry(dht.DHT11, 4, 10, true)
 	if err != nil {
 		log.Fatal(err)
 	}
