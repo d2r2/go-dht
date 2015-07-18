@@ -37,7 +37,7 @@ $ go get -u github.com/d2r2/go-dht
 ## Quick tutorial
 
 There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadDHTxxWithRetry(...)```.
-They both do exactly same thing - activate sensor and read and decode temperature and humidity values.
+They both do exactly same thing - activate sensor then read and decode temperature and humidity values.
 The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadDHTxxWithRetry(...)```.
 So, it's highly recomended to utilize ```ReadDHTxxWithRetry(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt takes 1.5-2 seconds (according to specification before repeated attempt you should wait 1-2 seconds).
 
