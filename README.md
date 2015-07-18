@@ -47,5 +47,5 @@ NOTE: If you enable "boost GPIO performance" parameter, application should run w
 
 ## License
 
-Go-dht is licensed inder MIT License.
+Go-dht is licensed under MIT License.
 
