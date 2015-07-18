@@ -216,8 +216,9 @@ func ReadDHTxx(sensorType SensorType, pin int,
 //   - pin number from gadget GPIO to interract with sensor.
 //   - boost preformance flag, should be used for old devices
 // such as Raspberry PI 1. Require root privileges.
-func ReadDHTxxWithRetry(sensorType SensorType, pin int, retry int,
-	boostPerfFlag bool) (temperature float32, humidity float32, retried int, err error) {
+//   - how many time to retry until success or сounter to zero
+func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
+	retry int) (temperature float32, humidity float32, retried int, err error) {
 	retried = 0
 	for {
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
