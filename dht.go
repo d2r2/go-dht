@@ -5,58 +5,76 @@ package dht
 import "C"
 
 import (
+	"bytes"
 	"fmt"
-	"log"
 	"reflect"
 	"time"
 	"unsafe"
+
+	"github.com/op/go-logging"
 )
 
 type SensorType int
 
 const (
+	// Most populare sensor
 	DHT11 SensorType = iota + 1
+	// More expensive and precise than DHT11
 	DHT22
+	// Aka DHT22
+	AM2302 = DHT22
 )
 
+// Comment INFO and uncomment DEBUG if you want detail debug output in library.
+var log *logging.Logger = buildLogger("go-dht",
+	//	logging.DEBUG,
+	logging.INFO,
+)
+
+// Keep pulse state with how long it lasted.
 type Pulse struct {
 	Value    byte
 	Duration time.Duration
 }
 
+// Activate sensor and get back bunch of pulses for further decoding.
+// C function call wrapper.
 func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 	var arr *C.int32_t
 	var arrLen C.int32_t
-	var l []int32
+	var list []int32
 	var boost C.int32_t = 0
 	if boostPerfFlag {
 		boost = 1
 	}
-	// return array: [pulse, duration, pulse, duration, ...]
+	// Return array: [pulse, duration, pulse, duration, ...]
 	r := C.dial_DHTxx_and_read(4, boost, &arr, &arrLen)
 	if r == -1 {
-		return nil, fmt.Errorf("Error during call C.dial_DHTxx_and_read()")
+		err := fmt.Errorf("Error during call C.dial_DHTxx_and_read()")
+		return nil, err
 	}
 	defer C.free(unsafe.Pointer(arr))
-	h := (*reflect.SliceHeader)(unsafe.Pointer(&l))
+	// Convert original C array arr to Go slice list
+	h := (*reflect.SliceHeader)(unsafe.Pointer(&list))
 	h.Data = uintptr(unsafe.Pointer(arr))
 	h.Len = int(arrLen)
 	h.Cap = int(arrLen)
-	pulses := make([]Pulse, len(l)/2)
-	// convert original int array ([pulse, duration, pulse, duration, ...])
+	pulses := make([]Pulse, len(list)/2)
+	// Convert original int array ([pulse, duration, pulse, duration, ...])
 	// to Pulse struct array
-	for i := 0; i < len(l)/2; i++ {
+	for i := 0; i < len(list)/2; i++ {
 		var value byte = 0
-		if l[i*2] != 0 {
+		if list[i*2] != 0 {
 			value = 1
 		}
 		pulses[i] = Pulse{Value: value,
-			Duration: time.Duration(l[i*2+1]) * time.Microsecond}
+			Duration: time.Duration(list[i*2+1]) * time.Microsecond}
 	}
 	return pulses, nil
 }
 
-func decodeByte(pulses []Pulse, start int) (int, error) {
+// TODO write comment to function
+func decodeByte(pulses []Pulse, start int) (byte, error) {
 	if len(pulses)-start < 16 {
 		return 0, fmt.Errorf("Can't decode byte, since range between "+
 			"index and array length is less than 16: %d, %d", start, len(pulses))
@@ -76,21 +94,21 @@ func decodeByte(pulses []Pulse, start int) (int, error) {
 		// Everything that less than this param is bit 0, bigger - bit 1.
 		const HIGH_DUR_AVG = (24 + (70-24)/2) * time.Microsecond
 		if pulseH.Duration > HIGH_DUR_MAX {
-			return 0, fmt.Errorf("High edge value duration exceed "+
-				"expected maximum amount in %v: %v", HIGH_DUR_MAX, pulseH.Duration)
+			return 0, fmt.Errorf("High edge value duration %v exceed "+
+				"expected maximum amount %v", pulseH.Duration, HIGH_DUR_MAX)
 		}
 		if pulseH.Duration > HIGH_DUR_AVG {
 			//fmt.Printf("bit %d is high\n", 7-i)
 			b = b | (1 << uint(7-i))
 		}
 	}
-	return b, nil
+	return byte(b), nil
 }
 
 // Decode bunch of pulse read from DHTxx sensors.
-// Use pdf description from /docs to read 5 bytes and
+// Use pdf specifications from /docs folder to read 5 bytes and
 // convert them to temperature and humidity.
-func decodeDHT11Pulses(pulses []Pulse) (temperature float32,
+func decodeDHT11Pulses(sensorType SensorType, pulses []Pulse) (temperature float32,
 	humidity float32, err error) {
 	if len(pulses) == 85 {
 		pulses = pulses[3:]
@@ -104,63 +122,87 @@ func decodeDHT11Pulses(pulses []Pulse) (temperature float32,
 			"DHTxx sensor, since incorrect length: %d", len(pulses))
 	}
 	pulses = pulses[:80]
-	// Decode humidity (integer part)
-	humInt, err := decodeByte(pulses, 0)
+	// Decode 1st byte
+	b0, err := decodeByte(pulses, 0)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode humidity (decimal part)
-	humDec, err := decodeByte(pulses, 16)
+	// Decode 2nd byte
+	b1, err := decodeByte(pulses, 16)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode temperature (integer part)
-	tempInt, err := decodeByte(pulses, 32)
+	// Decode 3rd byte
+	b2, err := decodeByte(pulses, 32)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode temperature (decimal part)
-	tempDec, err := decodeByte(pulses, 48)
+	// Decode 4th byte
+	b3, err := decodeByte(pulses, 48)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode control sum to verify all data received from sensor
+	// Decode 5th byte: control sum to verify all data received from sensor
 	sum, err := decodeByte(pulses, 64)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Produce data verification
-	if byte(sum) != byte(humInt+humDec+tempInt+tempDec) {
-		return -1, -1, fmt.Errorf("Control sum %d doesn't match %d (%d+%d+%d+%d)",
-			sum, byte(humInt+humDec+tempInt+tempDec),
-			humInt, humDec, tempInt, tempDec)
+	// Produce data integrity check
+	if sum != byte(b0+b1+b2+b3) {
+		err := fmt.Errorf("Control sum %d doesn't match %d (%d+%d+%d+%d)",
+			sum, byte(b0+b1+b2+b3), b0, b1, b2, b3)
+		return -1, -1, err
 	}
-	temperature = float32(tempInt)
-	humidity = float32(humInt)
-	if humidity > 100 {
+	// Debug output for 5 bytes
+	log.Debug("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
+	// Extract temprature and humidity depending on sensor type
+	temperature, humidity = 0.0, 0.0
+	if sensorType == DHT11 {
+		humidity = float32(b0)
+		temperature = float32(b2)
+	} else if sensorType == DHT22 {
+		humidity = (float32(b0)*256 + float32(b1)) / 10.0
+		temperature = (float32(b2&0x7F)*256 + float32(b3)) / 10.0
+		if b2&0x80 != 0 {
+			temperature *= -1.0
+		}
+	}
+	if humidity > 100.0 {
 		return -1, -1, fmt.Errorf("Humidity value exceed 100%: %v", humidity)
 	}
 	// Success
 	return temperature, humidity, nil
 }
 
+// Print bunch of pulses for debug purpose.
 func printPulseArrayForDebug(pulses []Pulse) {
-	fmt.Printf("Pulse count %d:\n", len(pulses))
+	var buf bytes.Buffer
 	for i, pulse := range pulses {
-		fmt.Printf("\tpulse %3d: %v, %v\n", i, pulse.Value, pulse.Duration)
+		buf.WriteString(fmt.Sprintf("pulse %3d: %v, %v\n", i,
+			pulse.Value, pulse.Duration))
 	}
+	log.Debug("Pulse count %d:\n%v", len(pulses), buf.String())
 }
 
 // Send activation request to DHTxx sensor via 1-pin.
 // Then decode pulses which was sent back with asynchronous
 // protocol specific for DHTxx sensors.
+// Parameters:
+//   - sensor type: DHT11, DHT22 (aka AM2302).
+//   - pin number from gadget GPIO to interract with sensor.
+//   - boost preformance flag, should be used for old devices
+// such as Raspberry PI 1. Require root privileges.
 func ReadDHTxx(sensorType SensorType, pin int,
 	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
+	// Activate sensor and read data to pulses array
 	pulses, err := dialDHTxxAndGetResponse(pin, boostPerfFlag)
 	if err != nil {
 		return -1, -1, err
 	}
-	temp, hum, err := decodeDHT11Pulses(pulses)
+	// Output debug information
+	printPulseArrayForDebug(pulses)
+	// Decode pulses
+	temp, hum, err := decodeDHT11Pulses(sensorType, pulses)
 	if err != nil {
 		return -1, -1, err
 	}
@@ -169,14 +211,19 @@ func ReadDHTxx(sensorType SensorType, pin int,
 
 // Read temperature (in celcius) and humidity (in percents)
 // from DHTxx sensors. Retry n times in case of failure.
+// Parameters:
+//   - sensor type: DHT11, DHT22 (aka AM2302).
+//   - pin number from gadget GPIO to interract with sensor.
+//   - boost preformance flag, should be used for old devices
+// such as Raspberry PI 1. Require root privileges.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, retry int,
 	boostPerfFlag bool) (temperature float32, humidity float32, retried int, err error) {
 	retried = 0
 	for {
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
 		if err != nil {
-			log.Println(err)
 			if retry > 0 {
+				log.Warning("%v", err)
 				retry--
 				retried++
 				// Sleep before new attempt
@@ -184,9 +231,6 @@ func ReadDHTxxWithRetry(sensorType SensorType, pin int, retry int,
 				continue
 			}
 			return -1, -1, retried, err
-		}
-		if retried > 0 {
-			log.Printf("Success! Retried %d times\n", retried)
 		}
 		return temp, hum, retried, nil
 	}

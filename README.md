@@ -24,12 +24,12 @@ func main() {
 
 ## Getting help
 
-GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht/dht)
+GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht)
 
 ## Installation
 
 ```bash
-$ go get -u github.com/d2r2/go-dht/dht
+$ go get -u github.com/d2r2/go-dht
 ```
 
 ## Quick tutorial
