@@ -188,13 +188,13 @@ func printPulseArrayForDebug(pulses []Pulse) {
 	log.Debug("Pulse count %d:\n%v", len(pulses), buf.String())
 }
 
-// Send activation request to DHTxx sensor via 1-pin.
-// Then decode pulses which was sent back with asynchronous
+// Send activation request to DHTxx sensor via specific pin.
+// Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors.
-// Parameters:
-//   - sensor type: DHT11, DHT22 (aka AM2302).
-//   - pin number from gadget GPIO to interract with sensor.
-//   - boost GPIO performance flag should be used for old devices
+// Input parameters:
+// - sensor type: DHT11, DHT22 (aka AM2302).
+// - pin number from gadget GPIO to interract with sensor.
+// - boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1. Require root privileges.
 func ReadDHTxx(sensorType SensorType, pin int,
 	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
@@ -213,14 +213,15 @@ func ReadDHTxx(sensorType SensorType, pin int,
 	return temp, hum, nil
 }
 
-// Read temperature (in celcius) and humidity (in percents)
-// from DHTxx sensors. Retry n times in case of failure.
-// Parameters:
-//   - sensor type: DHT11, DHT22 (aka AM2302).
-//   - pin number from gadget GPIO to interract with sensor.
-//   - boost GPIO performance flag should be used for old devices
+// Send activation request to DHTxx sensor via specific pin.
+// Then decode pulses sent back with asynchronous
+// protocol specific for DHTxx sensors. Retry n times in case of failure.
+// Input parameters:
+// - sensor type: DHT11, DHT22 (aka AM2302).
+// - pin number from gadget GPIO to interract with sensor.
+// - boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1. Require root privileges.
-//   - how many time to retry until success or сounter to zero
+// - how many time to retry until success or сounter to zero
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
 	retried = 0
