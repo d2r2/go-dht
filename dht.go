@@ -192,11 +192,13 @@ func printPulseArrayForDebug(pulses []Pulse) {
 // Send activation request to DHTxx sensor via specific pin.
 // Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors.
+
 // Input parameters:
 // 1) sensor type: DHT11, DHT22 (aka AM2302);
 // 2) pin number from GPIO connector to interract with sensor;
 // 3) boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1 (this will require root privileges).
+
 // Return:
 // 1) temperature in Celsius;
 // 2) humidity in percent;
