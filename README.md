@@ -15,7 +15,7 @@ Tested on Raspberry PI 1 (model B) and Banana PI (model M1).
 func main() {
 	// Read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
 	// Enable "boost GPIO performance" parameter, if your device is old
-	// as Raspberry BI 1 (this require root privileges)
+	// as Raspberry PI 1 (this require root privileges)
 	temperature, humidity, retried, err :=
 		dht.ReadDHTxxWithRetry(dht.DHT11, 4, true, 10)
 	if err != nil {
