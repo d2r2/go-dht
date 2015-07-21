@@ -202,7 +202,7 @@ func printPulseArrayForDebug(pulses []Pulse) {
 // Return:
 // 1) temperature in Celsius;
 // 2) humidity in percent;
-// 3) error if present
+// 3) error if present.
 func ReadDHTxx(sensorType SensorType, pin int,
 	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
 	// Activate sensor and read data to pulses array
@@ -223,17 +223,19 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // Send activation request to DHTxx sensor via specific pin.
 // Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors. Retry n times in case of failure.
+//
 // Input parameters:
 // 1) sensor type: DHT11, DHT22 (aka AM2302);
 // 2) pin number from gadget GPIO to interract with sensor;
 // 3) boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1 (this will require root privileges);
 // 4) how many times to retry until success either сounter is zeroed.
+//
 // Return:
 // 1) temperature in Celsius;
 // 2) humidity in percent;
-// 3) extra number to retries;
-// 4) error if present
+// 3) number of extra retries data from sensor;
+// 4) error if present.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
 	retried = 0
