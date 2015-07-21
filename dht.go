@@ -226,7 +226,7 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // 2) pin number from gadget GPIO to interract with sensor;
 // 3) boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1 (this will require root privileges);
-// 4) how many times to retry until success or сounter is zeroed
+// 4) how many times to retry until success either сounter is zeroed.
 // Return:
 // 1) temperature in Celsius;
 // 2) humidity in percent;
