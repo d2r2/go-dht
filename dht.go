@@ -10,11 +10,21 @@ import (
 	"reflect"
 	"time"
 	"unsafe"
-
-	"github.com/op/go-logging"
 )
 
 type SensorType int
+
+func (this SensorType) String() string {
+	if this == DHT11 {
+		return "DHT11"
+	} else if this == DHT22 {
+		return "DHT22"
+	} else if this == AM2302 {
+		return "AM2302"
+	} else {
+		return "!!! unknown !!!"
+	}
+}
 
 const (
 	// Most populare sensor
@@ -23,12 +33,6 @@ const (
 	DHT22
 	// Aka DHT22
 	AM2302 = DHT22
-)
-
-// Comment INFO and uncomment DEBUG if you want detail debug output in library.
-var log *logging.Logger = buildLogger("go-dht",
-	//	logging.DEBUG,
-	logging.INFO,
 )
 
 // Keep pulse state with how long it lasted.
@@ -168,7 +172,7 @@ func decodeDHT11Pulses(sensorType SensorType, pulses []Pulse) (temperature float
 		}
 	}
 	if humidity > 100.0 {
-		return -1, -1, fmt.Errorf("Humidity value exceed 100%: %v", humidity)
+		return -1, -1, fmt.Errorf("Humidity value exceed 100%%: %v", humidity)
 	}
 	// Success
 	return temperature, humidity, nil

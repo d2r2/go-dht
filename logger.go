@@ -6,6 +6,12 @@ import (
 	"github.com/op/go-logging"
 )
 
+// Comment INFO and uncomment DEBUG if you want detail debug output in library.
+var log *logging.Logger = buildLogger("dht",
+	//	logging.DEBUG,
+	logging.INFO,
+)
+
 var terminalBackend logging.LeveledBackend = nil
 
 func buildLogger(module string, level logging.Level) *logging.Logger {
