@@ -14,6 +14,7 @@ import (
 
 type SensorType int
 
+// Implement Stringer interface.
 func (this SensorType) String() string {
 	if this == DHT11 {
 		return "DHT11"
