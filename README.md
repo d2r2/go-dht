@@ -14,8 +14,10 @@ Tested on Raspberry PI 1 (model B) and Banana PI (model M1).
 ```go
 func main() {
 	// Read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
-	// Enable "boost GPIO performance" parameter, if your device is old
-	// as Raspberry PI 1 (this require root privileges)
+	// You may enable "boost GPIO performance" parameter, if your device is old
+	// as Raspberry PI 1 (this require root privileges). You can switch off
+	// "boost GPIO performance" parameter for old devices, but it may increase
+	// retry attempts. Play with this parameter.
 	temperature, humidity, retried, err :=
 		dht.ReadDHTxxWithRetry(dht.DHT11, 4, true, 10)
 	if err != nil {
@@ -44,7 +46,7 @@ They both do exactly same thing - activate sensor then read and decode temperatu
 The only thing which distinguish one from another - "retry count" parameter as additinal argument in ```ReadDHTxxWithRetry(...)```.
 So, it's highly recomended to utilize ```ReadDHTxxWithRetry(...)``` with "retry count" not less than 7, since sensor asynchronouse protocol is not very stable causing errors time to time. Each additinal retry attempt takes 1.5-2 seconds (according to specification before repeated attempt you should wait 1-2 seconds).
 
-This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI). It will works with any Raspberry PI clone, which support Kernel SPI bus, but you should in advance make SPI bus device available in /dev/ list.
+This functionality works not only with Raspberry PI, but with counterparts as well (tested with Raspberry PI and Banana PI).
 
 NOTE: If you enable "boost GPIO performance" parameter, application should run with root privileges, since C code inside requires this. In most cases it is sufficient to add "sudo -E" before "go run ...".
 
