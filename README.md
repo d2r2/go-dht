@@ -32,7 +32,8 @@ func main() {
 ## Getting help
 
 GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht).
-> For detailed explanation read great article "[Golang with Raspberry Pi : Read RH and Temperature from DHT22 or AM2302](https://skylabin.wordpress.com/2015/09/18/golang-with-raspberry-pi-read-rh-and-temperature-from-dht22-or-am2302)" written by Joseph Mathew. Thanks Joseph!
+
+For detailed explanation read great article "[Golang with Raspberry Pi : Read RH and Temperature from DHT22 or AM2302](https://skylabin.wordpress.com/2015/09/18/golang-with-raspberry-pi-read-rh-and-temperature-from-dht22-or-am2302)" written by Joseph Mathew. Thanks Joseph!
 
 ## Installation
 
