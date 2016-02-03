@@ -3,7 +3,7 @@
 DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11 (1).pdf)) and DHT22 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT22.pdf)) sensors are quite popular among Arduino, Raspberry PI and their counterparts developers (here you will find comparision [DHT11 vs DHT22](https://raw.github.com/d2r2/go-dht/master/docs/dht.pdf)):
 ![dht11 and dht22](https://raw.github.com/d2r2/go-dht/master/docs/dht11_dht22.jpg)
 
-They are cheap enough and affordable. So, here is a code written in [Go programming language](https://golang.org/) for Raspberry PI and counterparts, which gives you at the output temperature and humidity values (making all necessary signal processing behind the scenes).
+They are cheap enough and affordable. So, here is a code written in [Go programming language](https://golang.org/) for Raspberry PI and counterparts, which gives you at the output temperature and humidity values (making all necessary signal processing via their own 1-wire bus protocol behind the scenes).
 
 ## Compatibility
 
