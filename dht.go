@@ -53,7 +53,7 @@ func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 		boost = 1
 	}
 	// Return array: [pulse, duration, pulse, duration, ...]
-	r := C.dial_DHTxx_and_read(4, boost, &arr, &arrLen)
+	r := C.dial_DHTxx_and_read(C.int32_t(pin), boost, &arr, &arrLen)
 	if r == -1 {
 		err := fmt.Errorf("Error during call C.dial_DHTxx_and_read()")
 		return nil, err
