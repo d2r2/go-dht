@@ -29,12 +29,6 @@ func main() {
 }
 ```
 
-## Getting help
-
-GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht).
-
-For detailed explanation read great article "[Golang with Raspberry Pi : Read RH and Temperature from DHT22 or AM2302](https://skylabin.wordpress.com/2015/09/18/golang-with-raspberry-pi-read-rh-and-temperature-from-dht22-or-am2302)" written by Joseph Mathew. Thanks Joseph!
-
 ## Installation
 
 ```bash
@@ -60,15 +54,20 @@ Library comprised of 2 parts: low level to send queries and read raw data from s
 
 Originally attempt was made to write whole library in Golang, but during debugging it was found that Garbage Collector (GC) "stop the world" issue in early version of Golang sometimes freeze library in the middle of sensor reading process, which lead to unpredictable mistakes when some signals from sensor are missing.  Starting from Go 1.5 version GC behaviour was improved significantly, but original design left as is since it has been tested and works reliably in most cases.
 
-To install library on your Raspberry PI device you should execute console command `go get github.com/d2r2/go-dht` to download and install package to you device $HOME/$GOPATH/src path.
+To install library on your Raspberry PI device you should execute console command `go get -u github.com/d2r2/go-dht` to download and install/update package to you device $HOME/$GOPATH/src path.
 
 You may start from simple test with DHTxx sensor using ./example/test1.go application which will interact with the sensor connected to physical pin 7 (which correspond to GPIO4 pin-out).
 
 Also you can use cross compile technique, to build ARM application from x86/64bit system. For this your should install GCC tool-chain for ARM target platform. So, your x86/64bit linux system should have specific gcc compiler installed: in case of Debian or Ubuntu `arm-linux-gnueabi-gcc` (in case of Arch linux `arm-linux-gnueabihf-gcc`).
 After all, for instance, for cross compiling test application "./example/test1.go" to ARM target platform in Ubuntu/Debian you should run `CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 go build ./example/test1.go`.
 
+GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht).
+
+For detailed explanation read great article "[Golang with Raspberry Pi : Read RH and Temperature from DHT22 or AM2302](https://skylabin.wordpress.com/2015/09/18/golang-with-raspberry-pi-read-rh-and-temperature-from-dht22-or-am2302)" written by Joseph Mathew. Thanks Joseph!
+
 ## Contribute authors
 
+* Joseph Mathew (https://skylabin.wordpress.com/)
 * Alex Zhang ([ztc1997](https://github.com/ztc1997))
 * Andy Brown ([andybrown668](https://github.com/andybrown668))
 
