@@ -58,7 +58,7 @@ This functionality works not only with Raspberry PI, but with counterparts as we
 
 Library comprised of 2 parts: low level to send queries and read raw data from sensor written in C-code and front end functions with decoding raw data in Golang.
 
-Originally attempt was made to write whole library in Golang, but during debugging it was found that Garbage Collector (GC) "stop the world" issue ni early version of Golang sometimes freeze library in the middle of sensor reading process, which lead to unpredictable mistakes when some signals from sensor are missing.  Starting from Go 1.5 version GC behaviour was improved significantly, but original design left as is since it has been tested and works reliably in most cases.
+Originally attempt was made to write whole library in Golang, but during debugging it was found that Garbage Collector (GC) "stop the world" issue in early version of Golang sometimes freeze library in the middle of sensor reading process, which lead to unpredictable mistakes when some signals from sensor are missing.  Starting from Go 1.5 version GC behaviour was improved significantly, but original design left as is since it has been tested and works reliably in most cases.
 
 To install library on your Raspberry PI device you should execute console command `go get github.com/d2r2/go-dht` to download and install package to you device $HOME/$GOPATH/src path.
 
