@@ -113,7 +113,7 @@ func decodeByte(pulses []Pulse, start int) (byte, error) {
 // Decode bunch of pulse read from DHTxx sensors.
 // Use pdf specifications from /docs folder to read 5 bytes and
 // convert them to temperature and humidity.
-func decodeDHT11Pulses(sensorType SensorType, pulses []Pulse) (temperature float32,
+func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float32,
 	humidity float32, err error) {
 	if len(pulses) == 85 {
 		pulses = pulses[3:]
@@ -159,7 +159,7 @@ func decodeDHT11Pulses(sensorType SensorType, pulses []Pulse) (temperature float
 		return -1, -1, err
 	}
 	// Debug output for 5 bytes
-	log.Debug("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
+	log.Debugf("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
 	// Extract temprature and humidity depending on sensor type
 	temperature, humidity = 0.0, 0.0
 	if sensorType == DHT11 {
@@ -186,7 +186,7 @@ func printPulseArrayForDebug(pulses []Pulse) {
 		buf.WriteString(fmt.Sprintf("pulse %3d: %v, %v\n", i,
 			pulse.Value, pulse.Duration))
 	}
-	log.Debug("Pulse count %d:\n%v", len(pulses), buf.String())
+	log.Debugf("Pulse count %d:\n%v", len(pulses), buf.String())
 }
 
 // Send activation request to DHTxx sensor via specific pin.
@@ -213,7 +213,7 @@ func ReadDHTxx(sensorType SensorType, pin int,
 	// Output debug information
 	printPulseArrayForDebug(pulses)
 	// Decode pulses
-	temp, hum, err := decodeDHT11Pulses(sensorType, pulses)
+	temp, hum, err := decodeDHTxxPulses(sensorType, pulses)
 	if err != nil {
 		return -1, -1, err
 	}
@@ -243,7 +243,7 @@ func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
 		if err != nil {
 			if retry > 0 {
-				log.Warning("%v", err)
+				log.Warningf("%v", err)
 				retry--
 				retried++
 				// Sleep before new attempt

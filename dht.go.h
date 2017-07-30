@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <time.h>
+#include <unistd.h>
 
 // GPIO direction: receive either output data to specific GPIO pin.
 #define IN  0
@@ -44,6 +45,7 @@ static int gpio_export(int port, Pin *pin) {
     char buffer[BUFFER_MAX];
     ssize_t bytes_written;
     int fd;
+    int ret_flag = 0;
                  
     fd = open("/sys/class/gpio/export", O_WRONLY);
     if (-1 == fd) {
@@ -52,7 +54,10 @@ static int gpio_export(int port, Pin *pin) {
     }
     (*pin).pin = port;
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
-    write(fd, buffer, bytes_written);
+    if (-1 == write(fd, buffer, bytes_written)) {
+        fprintf(stderr, "Failed to export pin!\n");
+        ret_flag = -1;
+    }
     close(fd);
 
     #define DIRECTION_MAX 35
@@ -73,7 +78,7 @@ static int gpio_export(int port, Pin *pin) {
         return -1;
     }
                              
-    return 0;
+    return ret_flag;
 }
 
 // Stop working with specific pin.
@@ -84,6 +89,7 @@ static int gpio_unexport(Pin *pin) {
     char buffer[BUFFER_MAX];
     ssize_t bytes_written;
     int fd;
+    int ret_flag = 0;
                  
     fd = open("/sys/class/gpio/unexport", O_WRONLY);
     if (-1 == fd) {
@@ -92,9 +98,13 @@ static int gpio_unexport(Pin *pin) {
     }
                          
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
-    write(fd, buffer, bytes_written);
+    if (-1 == write(fd, buffer, bytes_written)) {
+        fprintf(stderr, "Failed to unexport pin!\n");
+        ret_flag = -1;
+    }
+
     close(fd);
-    return 0;
+    return ret_flag;
 }
  
 // Setup pin mode: input or output.
