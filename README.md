@@ -35,7 +35,7 @@ func main() {
 $ go get -u github.com/d2r2/go-dht
 ```
 
-## Quick tutorial
+## Quick start
 
 There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadDHTxxWithRetry(...)```.
 They both do exactly same thing - activate sensor then read and decode temperature and humidity values.
