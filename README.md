@@ -54,7 +54,7 @@ Library comprised of 2 parts: low level to send queries and read raw data from s
 
 Originally attempt was made to write whole library in Golang, but during debugging it was found that Garbage Collector (GC) "stop the world" issue in early version of Golang sometimes freeze library in the middle of sensor reading process, which lead to unpredictable mistakes when some signals from sensor are missing.  Starting from Go 1.5 version GC behaviour was improved significantly, but original design left as is since it has been tested and works reliably in most cases.
 
-To install library on your Raspberry PI device you should execute console command `go get -u github.com/d2r2/go-dht` to download and install/update package to you device $HOME/$GOPATH/src path.
+To install library on your Raspberry PI device you should execute console command `go get -u github.com/d2r2/go-dht` to download and install/update package to you device `$GOPATH/src` path.
 
 You may start from simple test with DHTxx sensor using ./example/test1.go application which will interact with the sensor connected to physical pin 7 (which correspond to GPIO4 pin-out).
 
