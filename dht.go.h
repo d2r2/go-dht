@@ -25,6 +25,10 @@
 // and for specifying input/output mode.
 typedef struct {
     int pin;
+    // Keep file descriptors for "direction" and "value"
+    // open during whole sensor session interraction,
+    // because it save milliseconds critical for one-wire
+    // DHTxx protocol
     int fd_direction;
     int fd_value;
 } Pin;
@@ -45,7 +49,12 @@ static int gpio_export(int port, Pin *pin) {
     char buffer[BUFFER_MAX];
     ssize_t bytes_written;
     int fd;
-    int ret_flag = 0;
+
+    // initialize pin to work with, "direction" and "value"
+    // file descriptors with empty value
+    (*pin).pin = -1;
+    (*pin).fd_direction = -1;
+    (*pin).fd_value = -1;
                  
     fd = open("/sys/class/gpio/export", O_WRONLY);
     if (-1 == fd) {
@@ -56,9 +65,17 @@ static int gpio_export(int port, Pin *pin) {
     bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
     if (-1 == write(fd, buffer, bytes_written)) {
         fprintf(stderr, "Failed to export pin!\n");
-        ret_flag = -1;
+        close(fd);
+        return -1;
     }
     close(fd);
+
+    // !!! Found in experimental way, that additional pause should exist
+    // between export pin to work with and direction set up. Otherwise,
+    // under the regular user mistake occures frequently !!!
+    //
+    // Sleep 50 milliseconds
+    sleep_usec(50*1000);
 
     #define DIRECTION_MAX 35
     char path1[DIRECTION_MAX];
@@ -78,33 +95,43 @@ static int gpio_export(int port, Pin *pin) {
         return -1;
     }
                              
-    return ret_flag;
+    return 0;
 }
 
 // Stop working with specific pin.
 static int gpio_unexport(Pin *pin) {
-    close((*pin).fd_direction);
-    close((*pin).fd_value);
+    // close "direction" file descriptor
+    if (-1 != (*pin).fd_direction) {
+        close((*pin).fd_direction);
+        (*pin).fd_direction = -1;
+    }
+    // close "value" file descriptor
+    if (-1 != (*pin).fd_value) {
+        close((*pin).fd_value);
+        (*pin).fd_value = -1;
+    }
 
-    char buffer[BUFFER_MAX];
-    ssize_t bytes_written;
-    int fd;
-    int ret_flag = 0;
+    if (-1 != (*pin).pin) {
+        char buffer[BUFFER_MAX];
+        ssize_t bytes_written;
+        int fd;
                  
-    fd = open("/sys/class/gpio/unexport", O_WRONLY);
-    if (-1 == fd) {
-        fprintf(stderr, "Failed to open unexport for writing!\n");
-        return -1;
-    }
+        fd = open("/sys/class/gpio/unexport", O_WRONLY);
+        if (-1 == fd) {
+            fprintf(stderr, "Failed to open unexport for writing!\n");
+            return -1;
+        }
                          
-    bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
-    if (-1 == write(fd, buffer, bytes_written)) {
-        fprintf(stderr, "Failed to unexport pin!\n");
-        ret_flag = -1;
-    }
+        bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
+        if (-1 == write(fd, buffer, bytes_written)) {
+            fprintf(stderr, "Failed to unexport pin!\n");
+            close(fd);
+            return -1;
+        }
 
-    close(fd);
-    return ret_flag;
+        close(fd);
+    }
+    return 0;
 }
  
 // Setup pin mode: input or output.
@@ -268,6 +295,7 @@ typedef struct {
 static int blink_n_times(int pin, int n) {
     Pin p;
     if (-1 == gpio_export(pin, &p)) {
+        gpio_unexport(&p);
         return -1;
     }
     if (-1 == gpio_direction(&p, OUT)) {
@@ -305,6 +333,7 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
     }
     Pin p;
     if (-1 == gpio_export(pin, &p)) {
+        gpio_unexport(&p);
         set_default_priority();
         return -1;
     }
