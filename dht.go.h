@@ -74,8 +74,8 @@ static int gpio_export(int port, Pin *pin) {
     // between export pin to work with and direction set up. Otherwise,
     // under the regular user mistake occures frequently !!!
     //
-    // Sleep 50 milliseconds
-    sleep_usec(50*1000);
+    // Sleep 150 milliseconds
+    sleep_usec(150*1000);
 
     #define DIRECTION_MAX 35
     char path1[DIRECTION_MAX];
