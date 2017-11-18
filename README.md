@@ -4,7 +4,7 @@ DHTxx temperature and humidity sensors
 [![Build Status](https://travis-ci.org/d2r2/go-dht.svg?branch=master)](https://travis-ci.org/d2r2/go-dht)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d2r2/go-dht)](https://goreportcard.com/report/github.com/d2r2/go-dht)
 [![GoDoc](https://godoc.org/github.com/d2r2/go-dht?status.svg)](https://godoc.org/github.com/d2r2/go-dht)
-[![MIT License](http://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
+[![MIT License](http://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 <!--
 [![Coverage Status](https://coveralls.io/repos/d2r2/go-dht/badge.svg?branch=master)](https://coveralls.io/r/d2r2/go-dht?branch=master)
 -->
