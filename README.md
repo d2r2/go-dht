@@ -2,12 +2,12 @@ DHTxx temperature and humidity sensors
 =========================================
 
 [![Build Status](https://travis-ci.org/d2r2/go-dht.svg?branch=master)](https://travis-ci.org/d2r2/go-dht)
-<!--
-[![Coverage Status](https://coveralls.io/repos/d2r2/go-dht/badge.svg?branch=master)](https://coveralls.io/r/d2r2/go-dht?branch=master)
--->
 [![Go Report Card](https://goreportcard.com/badge/github.com/d2r2/go-dht)](https://goreportcard.com/report/github.com/d2r2/go-dht)
 [![GoDoc](https://godoc.org/github.com/d2r2/go-dht?status.svg)](https://godoc.org/github.com/d2r2/go-dht)
 [![MIT License](http://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
+<!--
+[![Coverage Status](https://coveralls.io/repos/d2r2/go-dht/badge.svg?branch=master)](https://coveralls.io/r/d2r2/go-dht?branch=master)
+-->
 
 
 DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11-2.pdf)) and DHT22 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT22.pdf)) sensors are quite popular among Arduino, Raspberry PI and their counterparts developers (here you will find comparision [DHT11 vs DHT22](https://raw.github.com/d2r2/go-dht/master/docs/dht.pdf)):
