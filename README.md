@@ -1,4 +1,5 @@
-## DHTxx temperature and humidity sensors
+DHTxx temperature and humidity sensors
+=========================================
 
 [![Build Status](https://travis-ci.org/d2r2/go-dht.svg?branch=master)](https://travis-ci.org/d2r2/go-dht)
 [![Coverage Status](https://coveralls.io/repos/d2r2/go-dht/badge.svg?branch=master)](https://coveralls.io/r/d2r2/go-dht?branch=master)
@@ -10,11 +11,13 @@ DHT11 ([pdf reference](https://raw.github.com/d2r2/go-dht/master/docs/DHT11-2.pd
 
 They are cheap enough and affordable. So, here is a code written in [Go programming language](https://golang.org/) for Raspberry PI and counterparts, which gives you at the output temperature and humidity values (making all necessary signal processing via their own 1-wire bus protocol behind the scene).
 
-## Compatibility
+Compatibility
+----------------
 
 Tested on Raspberry PI 1 (model B) and Banana PI (model M1).
 
-## Golang usage
+Golang usage
+---------------
 
 ```go
 func main() {
@@ -34,13 +37,15 @@ func main() {
 }
 ```
 
-## Installation
+Installation
+------------
 
 ```bash
 $ go get -u github.com/d2r2/go-dht
 ```
 
-## Quick start
+Quick start
+-----------
 
 There are two functions you could use: ```ReadDHTxx(...)``` and ```ReadDHTxxWithRetry(...)```.
 They both do exactly same thing - activate sensor then read and decode temperature and humidity values.
@@ -53,7 +58,8 @@ This functionality works not only with Raspberry PI, but with counterparts as we
 
 > Note: This package does not have dependency on any sensor-specific 3-rd party C-code or library.
 
-## Tutorial
+Tutorial
+--------
 
 Library comprised of 2 parts: low level to send queries and read raw data from sensor written in C-code and front end functions with decoding raw data in Golang.
 
@@ -70,12 +76,14 @@ GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht).
 
 For detailed explanation read great article "[Golang with Raspberry Pi : Read RH and Temperature from DHT22 or AM2302](https://skylabin.wordpress.com/2015/09/18/golang-with-raspberry-pi-read-rh-and-temperature-from-dht22-or-am2302)" written by Joseph Mathew. Thanks Joseph!
 
-## Contribute authors
+Contribute authors
+------------------
 
 * Joseph Mathew (https://skylabin.wordpress.com/)
 * Alex Zhang ([ztc1997](https://github.com/ztc1997))
 * Andy Brown ([andybrown668](https://github.com/andybrown668))
 
-## License
+License
+-------
 
 Go-dht is licensed under MIT License.
