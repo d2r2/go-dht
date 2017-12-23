@@ -19,7 +19,7 @@ They are cheap enough and affordable. So, here is a code written in [Go programm
 Technology overview
 -------------------
 
-There are 2 methods how we can drive such devices which requre special pins switch from low to high and back:
+There are 2 methods how we can drive such devices which requre special pins switch from low to high level and back (employing specific "1-wire protocol" described in pdf documentation):
 1) First approach implies to work on the most lower layer to handle pins via access GPIO registers using linux "memory mapped" device (/dev/mem). This approach is most reliable (until you move to other RPI clone) and fastest with regard to the transmission speed. Disadvantage of this method is explained by the fact that each RPI-clone have their own address region to drive GPIO pins in "memory mapped" device.
 2) Second option implies to access GPIO pins via special layer based on linux "device tree" approach (/sys/class/gpio/... virtual file system), which translate such operations to direct register writes and reads described in 1st approach. In some sence it is more compatible when you move from original Raspberry PI to RPI-clones, but may have some issues in stability of specific implementations. As it found some clones don't implement this layer at all from the box (Beaglebone for instance). 
 
