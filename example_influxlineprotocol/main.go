@@ -53,7 +53,7 @@ func main() {
 	// is invalid in this case because we are talking about a deficit.
 	vpd := (ea - es) * -1
 
-	str := fmt.Sprintf("%s,temperature=%f,humidity=%f,vpd=%f,retried=%d %d",
+	str := fmt.Sprintf("%s temperature=%f,humidity=%f,vpd=%f,retried=%d %d",
 		stype, temperature, humidity, vpd, retried, time.Now().UnixNano())
 	fmt.Fprintln(os.Stdout, str)
 }
