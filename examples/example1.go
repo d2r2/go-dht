@@ -1,10 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/d2r2/go-dht"
+	logger "github.com/d2r2/go-logger"
+)
+
+var lg = logger.NewPackageLogger("main",
+	logger.DebugLevel,
+	// logger.InfoLevel,
 )
 
 func main() {
@@ -13,15 +16,16 @@ func main() {
 	// as Raspberry PI 1 (this will require root privileges). You can switch off
 	// "boost GPIO performance" parameter for old devices, but it may increase
 	// retry attempts. Play with this parameter.
+	defer logger.FinalizeLogger()
 	sensorType := dht.DHT22
 	for {
 		temperature, humidity, retried, err :=
 			dht.ReadDHTxxWithRetry(sensorType, 4, false, 10)
 		if err != nil {
-			log.Fatal(err)
+			lg.Fatal(err)
 		}
 		// print temperature and humidity
-		fmt.Printf("Sensor = %v: Temperature = %v*C, Humidity = %v%% (retried %d times)\n",
+		lg.Infof("Sensor = %v: Temperature = %v*C, Humidity = %v%% (retried %d times)",
 			sensorType, temperature, humidity, retried)
 	}
 }

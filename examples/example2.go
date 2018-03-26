@@ -8,6 +8,12 @@ import (
 	"time"
 
 	"github.com/d2r2/go-dht"
+	logger "github.com/d2r2/go-logger"
+)
+
+var lg = logger.NewPackageLogger("main",
+	logger.DebugLevel,
+	// logger.InfoLevel,
 )
 
 var (
@@ -38,7 +44,7 @@ func main() {
 	temperature, humidity, retried, err :=
 		dht.ReadDHTxxWithRetry(sensorType, pin, boostPerfFlag, 10)
 	if err != nil {
-		panic(err)
+		lg.Fatal(err)
 	}
 
 	//fmt.Printf("Sensor = %v: Temperature = %v*C, Humidity = %v%% (retried %d times)\n",

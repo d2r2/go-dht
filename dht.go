@@ -6,10 +6,14 @@ import "C"
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 	"unsafe"
+
+	"github.com/d2r2/go-shell/shell"
 )
 
 type SensorType int
@@ -55,7 +59,7 @@ func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 	// Return array: [pulse, duration, pulse, duration, ...]
 	r := C.dial_DHTxx_and_read(C.int32_t(pin), boost, &arr, &arrLen)
 	if r == -1 {
-		err := fmt.Errorf("Error during call C.dial_DHTxx_and_read()")
+		err := errors.New("Error during call C.dial_DHTxx_and_read()")
 		return nil, err
 	}
 	defer C.free(unsafe.Pointer(arr))
@@ -159,7 +163,7 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 		return -1, -1, err
 	}
 	// Debug output for 5 bytes
-	log.Debugf("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
+	lg.Debugf("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
 	// Extract temprature and humidity depending on sensor type
 	temperature, humidity = 0.0, 0.0
 	if sensorType == DHT11 {
@@ -186,7 +190,7 @@ func printPulseArrayForDebug(pulses []Pulse) {
 		buf.WriteString(fmt.Sprintf("pulse %3d: %v, %v\n", i,
 			pulse.Value, pulse.Duration))
 	}
-	log.Debugf("Pulse count %d:\n%v", len(pulses), buf.String())
+	lg.Debugf("Pulse count %d:\n%v", len(pulses), buf.String())
 }
 
 // Send activation request to DHTxx sensor via specific pin.
@@ -238,17 +242,25 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // 4) error if present.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
+	ctx, cancel := context.WithCancel(context.Background())
+	shell.CloseContextOnKillSignal(cancel)
 	retried = 0
 	for {
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
 		if err != nil {
 			if retry > 0 {
-				log.Warningf("%v", err)
+				lg.Warning(err)
 				retry--
 				retried++
-				// Sleep before new attempt
-				time.Sleep(1500 * time.Millisecond)
-				continue
+				select {
+				case <-ctx.Done():
+					// Interrupt loop, if pending termination
+					return -1, -1, retried, errors.New("Termination pending...")
+				default:
+					// Sleep before new attempt
+					time.Sleep(1500 * time.Millisecond)
+					continue
+				}
 			}
 			return -1, -1, retried, err
 		}
