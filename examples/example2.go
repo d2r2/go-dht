@@ -3,10 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/d2r2/go-dht"
 	"math"
 	"os"
 	"time"
+
+	"github.com/d2r2/go-dht"
 )
 
 var (
@@ -22,6 +23,9 @@ func init() {
 }
 
 func main() {
+	// Calculate VPD (vapor pressure deficit), which defined as Relative humidity,
+	// with output in format of influx protocol.
+	// Read for more details: https://physics.stackexchange.com/questions/4343/how-can-i-calculate-vapor-pressure-deficit-from-temperature-and-relative-humidit
 	flag.Parse()
 	var sensorType dht.SensorType
 
