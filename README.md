@@ -100,7 +100,7 @@ Contribute authors
 Contact
 -------
 
-Please use [Github issue tracker](https://github.com/d2r2/gotk3/issues) for filing bugs or feature requests.
+Please use [Github issue tracker](https://github.com/d2r2/go-dht/issues) for filing bugs or feature requests.
 
 License
 -------
