@@ -13,7 +13,7 @@ env:
 # second part of the GOARCH workaround
 # now actually set the GOARCH env variable to the value of the temporary variable set earlier
 before_install:
-  - sudo apt-get install arm-linux-gnueabi-gcc
+  - sudo apt-get install arm-linux-gnueabi
   #- export GOARCH=$TRAVIS_GOARCH
   #- export GOARCH=$TRAVIS_GOARCH
   - go env # for debugging
