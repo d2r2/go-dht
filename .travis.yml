@@ -1,1 +1,18 @@
 language: go
+go:
+  - tip
+
+# first part of the GOARCH workaround
+# setting the GOARCH directly doesn't work, since the value will be overwritten later
+# so set it to a temporary environment variable first
+env:
+  matrix:
+    - GOARCH=amd64
+    - CC=arm-linux-gnueabihf-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6
+
+# second part of the GOARCH workaround
+# now actually set the GOARCH env variable to the value of the temporary variable set earlier
+before_install:
+  #- export GOARCH=$TRAVIS_GOARCH
+  #- export GOARCH=$TRAVIS_GOARCH
+  - go env # for debugging
