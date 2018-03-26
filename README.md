@@ -1,5 +1,5 @@
 DHTxx temperature and humidity sensors
-=========================================
+======================================
 
 [![Build Status](https://travis-ci.org/d2r2/go-dht.svg?branch=master)](https://travis-ci.org/d2r2/go-dht)
 [![Go Report Card](https://goreportcard.com/badge/github.com/d2r2/go-dht)](https://goreportcard.com/report/github.com/d2r2/go-dht)
@@ -26,12 +26,12 @@ There are 2 methods how we can drive such devices which requre special pins swit
 So, here I'm using second approach.
 
 Compatibility
-----------------
+-------------
 
 Tested on Raspberry PI 1 (model B) and Banana PI (model M1).
 
 Golang usage
----------------
+------------
 
 ```go
 func main() {
