@@ -18,12 +18,8 @@ env:
 # second part of the GOARCH workaround
 # now actually set the GOARCH env variable to the value of the temporary variable set earlier
 before_install:
-  - sudo apt-get install gcc-arm-linux-gnueabi
-  - export CGO_ENABLED=$TRAVIS_CGO_ENABLED
-  - export GOARCH=$TRAVIS_GOARCH
-  - export GOARM=$TRAVIS_GOARM
-  - export GOOS=$TRAVIS_GOOS
-  - export CC=$TRAVIS_CC
+  - sudo apt-get install gcc-arm-linux-gnueabi # for cross compile to ARM
+  - export CGO_ENABLED=$TRAVIS_CGO_ENABLED GOARCH=$TRAVIS_GOARCH GOARM=$TRAVIS_GOARM GOOS=$TRAVIS_GOOS CC=$TRAVIS_CC
   - go env # for debugging
   - go tool dist env # for debugging
   
