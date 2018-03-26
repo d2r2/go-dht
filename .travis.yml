@@ -6,16 +6,23 @@ go:
 # setting the GOARCH directly doesn't work, since the value will be overwritten later
 # so set it to a temporary environment variable first
 env:
+  global:
+    TRAVIS_CGO_ENABLED=1
+    TRAVIS_GOOS=linux
   matrix:
-    - GOARCH=amd64
-    - CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6
+    #- GOARCH=amd64
+    #- CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6
+    - TRAVIS_GOARCH=amd64
+    - TRAVIS_GOARCH=arm TRAVIS_CC=arm-linux-gnueabi-gcc TRAVIS_GOARCH=arm TRAVIS_GOARM=6
 
 # second part of the GOARCH workaround
 # now actually set the GOARCH env variable to the value of the temporary variable set earlier
 before_install:
   - sudo apt-get install gcc-arm-linux-gnueabi
-  #- export GOARCH=$TRAVIS_GOARCH
-  #- export GOARCH=$TRAVIS_GOARCH
+  - export CGO_ENABLED=$TRAVIS_CGO_ENABLED
+  - export GOOS=$TRAVIS_GOOS
+  - export CC=$TRAVIS_CC
+  - export GOARM=$TRAVIS_GOARM
   - go env # for debugging
   - go tool dist env # for debugging
   
