@@ -10,10 +10,8 @@ env:
     TRAVIS_CGO_ENABLED=1
     TRAVIS_GOOS=linux
   matrix:
-    #- GOARCH=amd64
-    #- CC=arm-linux-gnueabi-gcc GOOS=linux GOARCH=arm GOARM=6
     - TRAVIS_GOARCH=amd64
-    - TRAVIS_GOARCH=arm TRAVIS_CC=arm-linux-gnueabi-gcc TRAVIS_GOARM=6
+    - TRAVIS_GOARCH=arm TRAVIS_CC=arm-linux-gnueabi-gcc TRAVIS_GOARM=5
 
 # second part of the GOARCH workaround
 # now actually set the GOARCH env variable to the value of the temporary variable set earlier
