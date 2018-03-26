@@ -17,3 +17,6 @@ before_install:
   #- export GOARCH=$TRAVIS_GOARCH
   #- export GOARCH=$TRAVIS_GOARCH
   - go env # for debugging
+  - go tool dist env # for debugging
+  
+  
