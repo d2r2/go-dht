@@ -96,6 +96,7 @@ Contribute authors
 * Joseph Mathew (https://skylabin.wordpress.com/)
 * Alex Zhang ([ztc1997](https://github.com/ztc1997))
 * Andy Brown ([andybrown668](https://github.com/andybrown668))
+* Gareth Dunstone ([gdunstone](https://github.com/gdunstone))
 
 Contact
 -------
