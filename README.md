@@ -97,6 +97,11 @@ Contribute authors
 * Alex Zhang ([ztc1997](https://github.com/ztc1997))
 * Andy Brown ([andybrown668](https://github.com/andybrown668))
 
+Contact
+-------
+
+Please use [Github issue tracker](https://github.com/d2r2/gotk3/issues) for filing bugs or feature requests.
+
 License
 -------
 
