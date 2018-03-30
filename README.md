@@ -84,7 +84,7 @@ To install library on your Raspberry PI device you should execute console comman
 You may start from simple test with DHTxx sensor using `./example/test1.go` application which will interact with the sensor connected to physical pin 7 (which correspond to GPIO4 pin-out).
 
 Also you can use cross compile technique, to build ARM application from x86/64bit system. For this your should install GCC tool-chain for ARM target platform. So, your x86/64bit linux system should have specific gcc compiler installed: in case of Debian or Ubuntu `arm-linux-gnueabi-gcc` (in case of Arch linux `arm-linux-gnueabihf-gcc`).
-After all, for instance, for cross compiling test application "./example/test1.go" to ARM target platform in Ubuntu/Debian you should run `CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 go build ./example/test1.go`.
+After all, for instance, for cross compiling test application "./examples/example1/example1.go" to ARM target platform in Ubuntu/Debian you should run `CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 go build ./examples/example1/example1.go`.
 
 GoDoc [documentation](http://godoc.org/github.com/d2r2/go-dht).
 
