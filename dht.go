@@ -158,7 +158,7 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 	}
 	// Produce data integrity check
 	if sum != byte(b0+b1+b2+b3) {
-		err := fmt.Errorf("Control sum %d doesn't match %d (%d+%d+%d+%d)",
+		err := fmt.Errorf("CRC (control sum) %d doesn't match %d (%d+%d+%d+%d)",
 			sum, byte(b0+b1+b2+b3), b0, b1, b2, b3)
 		return -1, -1, err
 	}
