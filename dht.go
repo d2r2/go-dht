@@ -1,7 +1,7 @@
 package dht
 
 // #include "dht.go.h"
-// #cgo LDFLAGS: -lrt
+// #cgo LDFLAGS: -lrt -_GNU_SOURCE
 import "C"
 
 import (
@@ -13,7 +13,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/d2r2/go-shell/shell"
+	"github.com/d2r2/go-shell"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type SensorType int
@@ -53,13 +54,21 @@ func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 	var arrLen C.int32_t
 	var list []int32
 	var boost C.int32_t = 0
+	var err2 *C.Error
 	if boostPerfFlag {
 		boost = 1
 	}
 	// Return array: [pulse, duration, pulse, duration, ...]
-	r := C.dial_DHTxx_and_read(C.int32_t(pin), boost, &arr, &arrLen)
+	r := C.dial_DHTxx_and_read(C.int32_t(pin), boost, &arr, &arrLen, &err2)
 	if r == -1 {
-		err := errors.New("Error during call C.dial_DHTxx_and_read()")
+		var err error
+		if err2 != nil {
+			msg := C.GoString(err2.message)
+			err = errors.New(spew.Sprintf("Error during call C.dial_DHTxx_and_read(): %v", msg))
+			C.free_error(err2)
+		} else {
+			err = errors.New(spew.Sprintf("Error during call C.dial_DHTxx_and_read()"))
+		}
 		return nil, err
 	}
 	defer C.free(unsafe.Pointer(arr))
@@ -156,10 +165,12 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 	if err != nil {
 		return -1, -1, err
 	}
-	// Produce data integrity check
+	// Produce data consistency check
 	if sum != byte(b0+b1+b2+b3) {
-		err := fmt.Errorf("CRC (control sum) %d doesn't match %d (%d+%d+%d+%d)",
-			sum, byte(b0+b1+b2+b3), b0, b1, b2, b3)
+		err := errors.New(spew.Sprintf(
+			"Checksums doesn't match: checksum from sensor(%v) != "+
+				"calculated checksum(%v=%v+%v+%v+%v)",
+			sum, byte(b0+b1+b2+b3), b0, b1, b2, b3))
 		return -1, -1, err
 	}
 	// Debug output for 5 bytes
@@ -176,6 +187,7 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 			temperature *= -1.0
 		}
 	}
+	// Additional check for data correctness
 	if humidity > 100.0 {
 		return -1, -1, fmt.Errorf("Humidity value exceed 100%%: %v", humidity)
 	}
