@@ -29,6 +29,10 @@ func init() {
 }
 
 func main() {
+	defer logger.FinalizeLogger()
+	// Uncomment/comment next line to suppress/increase verbosity of output
+	// logger.ChangePackageLogLevel("dht", logger.InfoLevel)
+
 	// Calculate VPD (vapor pressure deficit), which defined as Relative humidity,
 	// with output in format of influx protocol.
 	// Read for more details: https://physics.stackexchange.com/questions/4343/how-can-i-calculate-vapor-pressure-deficit-from-temperature-and-relative-humidit

@@ -13,8 +13,9 @@ var lg = logger.NewPackageLogger("main",
 
 func main() {
 	defer logger.FinalizeLogger()
-	// Uncomment next line to suppress verbose output
-	logger.ChangePackageLogLevel("dht", logger.InfoLevel)
+	// Uncomment/comment next line to suppress/increase verbosity of output
+	// logger.ChangePackageLogLevel("dht", logger.InfoLevel)
+
 	sensorType := dht.DHT11
 	// Read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
 	// You may enable "boost GPIO performance" parameter, if your device is old

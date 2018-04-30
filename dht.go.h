@@ -1,6 +1,10 @@
 #ifndef GO_DHT_H
 #define GO_DHT_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +38,7 @@ typedef struct {
     int fd_value;
 } Pin;
 
+// Struct to keep error info on function return.
 typedef struct {
     char *message;
 } Error;
@@ -45,11 +50,18 @@ static void create_error(Error **err, const char* format, ...) {
         *err = (Error *)malloc(sizeof(Error));
         va_list argptr;
         va_start(argptr, format);
-        asprintf(&(*err)->message, format, argptr);
+        vasprintf(&(*err)->message, format, argptr);
         va_end(argptr);
     }
 }
  
+static void free_error(Error *err) {
+    if (err != NULL) {
+        free(err->message);
+    }
+    free(err);
+}
+
 // char* get_error_message(char const *msg) {
 //     size_t needed = snprintf(NULL, 0, "%s: %s (%d)", msg, strerror(errno), errno) + 1;
 //     char  *buffer = malloc(needed);
@@ -65,11 +77,6 @@ static int sleep_usec(int32_t usec) {
     // rest part of microseconds convert to nanoseconds
     tim.tv_nsec = (usec % 1000000) * 1000;
     return nanosleep(&tim , &tim2);
-}
-
-static void free_error(Error *err) {
-    free(err->message);
-    free(err);
 }
 
 // Start working with specific pin.
@@ -151,9 +158,9 @@ static int gpio_unexport(Pin *pin, Error **err) {
             return -1;
         }
                          
-        bytes_written = snprintf(buffer, BUFFER_MAX, "%d", (*pin).pin);
+        bytes_written = snprintf(buffer, BUFFER_MAX, "%d", pin->pin);
         if (-1 == write(fd, buffer, bytes_written)) {
-            create_error(err, "failed to unexport pin");
+            create_error(err, "failed to unexport pin %d", pin->pin);
             close(fd);
             return -1;
         }
@@ -166,9 +173,10 @@ static int gpio_unexport(Pin *pin, Error **err) {
 // Setup pin mode: input or output.
 static int gpio_direction(Pin *pin, int dir, Error **err) {
     static const char s_directions_str[]  = "in\0out";
-         
-    if (-1 == write((*pin).fd_direction, &s_directions_str[IN == dir ? 0 : 3], IN == dir ? 2 : 3)) {
-        create_error(err, "failed to set direction");
+    if (-1 == write(pin->fd_direction, &s_directions_str[IN == dir ? 0:3],
+            IN == dir ? 2:3)) {
+        create_error(err, "failed to set direction \"%s\" to pin %d",
+            &s_directions_str[IN == dir ? 0:3], pin->pin);
         return -1;
     }
     return 0;
@@ -178,12 +186,11 @@ static int gpio_direction(Pin *pin, int dir, Error **err) {
 // which correspond to low or high signal levels.
 static int gpio_read(Pin *pin, Error **err) {
     char value_str[3];
-                 
-    if (-1 == lseek((*pin).fd_value, 0, SEEK_SET)) {
+    if (-1 == lseek(pin->fd_value, 0, SEEK_SET)) {
         create_error(err, "failed to seek file");
         return -1;
     }
-    if (-1 == read((*pin).fd_value, value_str, 3)) {
+    if (-1 == read(pin->fd_value, value_str, 3)) {
         create_error(err, "failed to read value");
         return -1;
     }
@@ -191,10 +198,21 @@ static int gpio_read(Pin *pin, Error **err) {
     // Small optimization to speed up GPIO processing
     // due to ARM devices CPU slowness.
     if (value_str[1] == '\0') {
-        return value_str[0] == '0' ? 0 : 1;
+        return value_str[0] == '0' ? 0:1;
     } else {
         return atoi(value_str);
     }
+}
+
+// Set up specific pin level to 0 (low) or 1 (high).
+static int gpio_write(Pin *pin, int value, Error **err) {
+    static const char s_values_str[] = {'0', 0, '1'};
+    if (1 != write(pin->fd_value, &s_values_str[LOW == value ? 0:2], 1)) {
+        create_error(err, "failed to write value \"%s\" to pin %d",
+            &s_values_str[LOW == value ? 0:2], pin->pin);
+        return -1;
+    }
+    return 0;
 }
 
 // Macro to convert timespec structure value to microseconds.
@@ -273,18 +291,6 @@ static int gpio_read_seq_until_timeout(Pin *pin,
     return 0;
 }
  
-// Set up specific pin level to 0 (low) or 1 (high).
-static int gpio_write(Pin *pin, int value, Error **err) {
-    static const char s_values_str[] = "01";
-         
-    if (1 != write((*pin).fd_value, &s_values_str[LOW == value ? 0 : 1], 1)) {
-        create_error(err, "failed to write value");
-        return -1;
-    }
-                                 
-    return 0;
-}
-
 // Used to gain maximum performance from device during
 // receiving bunch of data from sensors like DHTxx.
 static int set_max_priority(Error **err) {

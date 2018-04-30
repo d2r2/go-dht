@@ -1,11 +1,10 @@
 package dht
 
 // #include "dht.go.h"
-// #cgo LDFLAGS: -lrt -_GNU_SOURCE
+// #cgo LDFLAGS: -lrt
 import "C"
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -166,15 +165,19 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 		return -1, -1, err
 	}
 	// Produce data consistency check
-	if sum != byte(b0+b1+b2+b3) {
+	calcSum := byte(b0 + b1 + b2 + b3)
+	if sum != calcSum {
 		err := errors.New(spew.Sprintf(
-			"Checksums doesn't match: checksum from sensor(%v) != "+
+			"CRCs doesn't match: checksum from sensor(%v) != "+
 				"calculated checksum(%v=%v+%v+%v+%v)",
-			sum, byte(b0+b1+b2+b3), b0, b1, b2, b3))
+			sum, calcSum, b0, b1, b2, b3))
 		return -1, -1, err
+	} else {
+		lg.Debugf("CRCs verified: checksum from sensor(%v) = calculated checksum(%v=%v+%v+%v+%v)",
+			sum, calcSum, b0, b1, b2, b3)
 	}
 	// Debug output for 5 bytes
-	lg.Debugf("Five bytes from DHTxx: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
+	lg.Debugf("Decoded from DHTxx sensor: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
 	// Extract temprature and humidity depending on sensor type
 	temperature, humidity = 0.0, 0.0
 	if sensorType == DHT11 {
@@ -197,12 +200,13 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 
 // Print bunch of pulses for debug purpose.
 func printPulseArrayForDebug(pulses []Pulse) {
-	var buf bytes.Buffer
-	for i, pulse := range pulses {
-		buf.WriteString(fmt.Sprintf("pulse %3d: %v, %v\n", i,
-			pulse.Value, pulse.Duration))
-	}
-	lg.Debugf("Pulse count %d:\n%v", len(pulses), buf.String())
+	// var buf bytes.Buffer
+	// for i, pulse := range pulses {
+	// 	buf.WriteString(fmt.Sprintf("pulse %3d: %v, %v\n", i,
+	// 		pulse.Value, pulse.Duration))
+	// }
+	// lg.Debugf("Pulse count %d:\n%v", len(pulses), buf.String())
+	lg.Debugf("Pulses received from DHTxx sensor: %v", pulses)
 }
 
 // Send activation request to DHTxx sensor via specific pin.
