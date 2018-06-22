@@ -13,6 +13,11 @@ var lg = logger.NewPackageLogger("main",
 
 func main() {
 	defer logger.FinalizeLogger()
+
+	lg.Notify("***************************************************************************************************")
+	lg.Notify("*** You can change verbosity of output, to modify logging level of module \"dht\"")
+	lg.Notify("*** Uncomment/comment corresponding lines with call to ChangePackageLogLevel(...)")
+	lg.Notify("***************************************************************************************************")
 	// Uncomment/comment next line to suppress/increase verbosity of output
 	// logger.ChangePackageLogLevel("dht", logger.InfoLevel)
 
