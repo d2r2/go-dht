@@ -50,7 +50,8 @@ static void create_error(Error **err, const char* format, ...) {
         *err = (Error *)malloc(sizeof(Error));
         va_list argptr;
         va_start(argptr, format);
-        vasprintf(&(*err)->message, format, argptr);
+        // get return value to suppress warning warn_unused_result
+        int res = vasprintf(&(*err)->message, format, argptr);
         va_end(argptr);
     }
 }
