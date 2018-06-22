@@ -28,7 +28,7 @@ So, here I'm using second approach.
 Compatibility
 -------------
 
-Tested on Raspberry PI 1 (model B) and Banana PI (model M1).
+Tested on Raspberry PI 1 (model B), Banana PI (model M1), Orange PI One.
 
 Golang usage
 ------------
