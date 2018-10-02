@@ -258,8 +258,14 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // 4) error if present.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
+	// Use done channel as a trigger to exit from goroutine
+	// waiting for OS termination events.
+	done := make(chan struct{})
+	defer close(done)
+	// Create context with cancelation possibility.
 	ctx, cancel := context.WithCancel(context.Background())
-	shell.CloseContextOnKillSignal(cancel)
+	// Run goroutine waiting for OS termantion events, either Ctrl+C.
+	shell.CloseContextOnKillSignal(cancel, done)
 	retried = 0
 	for {
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
