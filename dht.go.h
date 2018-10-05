@@ -27,6 +27,9 @@
 #define FALSE 0
 #define TRUE 1
 
+// local declaration of included functions 
+int sched_setscheduler(pid_t pid, int policy, const struct sched_param *param); 
+
 // Keep pin no, file descriptors for data reading/writing
 // and for specifying input/output mode.
 typedef struct {
