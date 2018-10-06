@@ -258,13 +258,39 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // 4) error if present.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
-	// Use done channel as a trigger to exit from goroutine
-	// waiting for OS termination events.
+	// Create default context
+	ctx := context.Background()
+	// Reroute call
+	return ReadDHTxxWithContextAndRetry(ctx, sensorType, pin,
+		boostPerfFlag, retry)
+}
+
+// Send activation request to DHTxx sensor via specific pin.
+// Then decode pulses sent back with asynchronous
+// protocol specific for DHTxx sensors. Retry n times in case of failure.
+//
+// Input parameters:
+// 1) parent context; could be used to manage life-cycle
+//  of sensor request session from code outside;
+// 2) sensor type: DHT11, DHT22 (aka AM2302);
+// 3) pin number from gadget GPIO to interract with sensor;
+// 4) boost GPIO performance flag should be used for old devices
+//  such as Raspberry PI 1 (this will require root privileges);
+// 5) how many times to retry until success either сounter is zeroed.
+//
+// Return:
+// 1) temperature in Celsius;
+// 2) humidity in percent;
+// 3) number of extra retries data from sensor;
+// 4) error if present.
+func ReadDHTxxWithContextAndRetry(parent context.Context, sensorType SensorType, pin int,
+	boostPerfFlag bool, retry int) (temperature float32, humidity float32, retried int, err error) {
+	// Use done channel as a trigger to exit from signal waiting goroutine.
 	done := make(chan struct{})
 	defer close(done)
 	// Create context with cancelation possibility.
-	ctx, cancel := context.WithCancel(context.Background())
-	// Run goroutine waiting for OS termantion events, either Ctrl+C.
+	ctx, cancel := context.WithCancel(parent)
+	// Run goroutine waiting for OS termantion events, including keyboard Ctrl+C.
 	shell.CloseContextOnKillSignal(cancel, done)
 	retried = 0
 	for {
@@ -275,12 +301,12 @@ func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 				retry--
 				retried++
 				select {
+				// Check for termination request.
 				case <-ctx.Done():
-					// Interrupt loop, if pending termination
-					return -1, -1, retried, errors.New("Termination pending...")
-				default:
-					// Sleep before new attempt
-					time.Sleep(1500 * time.Millisecond)
+					// Interrupt loop, if pending termination.
+					return -1, -1, retried, ctx.Err()
+				// Sleep before new attempt 1.5 sec.
+				case <-time.After(1500 * time.Millisecond):
 					continue
 				}
 			}
