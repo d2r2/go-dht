@@ -15,6 +15,35 @@
 #include <time.h>
 #include <unistd.h>
 
+// Add general block to detect OS
+#ifdef _WIN32
+   //define something for Windows (32-bit and 64-bit, this part is common)
+   #ifdef _WIN64
+      //define something for Windows (64-bit only)
+   #else
+      //define something for Windows (32-bit only)
+   #endif
+#elif __APPLE__
+    #include "TargetConditionals.h"
+    #if TARGET_IPHONE_SIMULATOR
+         // iOS Simulator
+    #elif TARGET_OS_IPHONE
+        // iOS device
+    #elif TARGET_OS_MAC
+        // Other kinds of Mac OS
+    #else
+    #   error "Unknown Apple platform"
+    #endif
+#elif __linux__
+    // linux
+#elif __unix__ // all unices not caught above
+    // Unix
+#elif defined(_POSIX_VERSION)
+    // POSIX
+#else
+#   error "Unknown compiler"
+#endif
+
 // GPIO direction: receive either output data to specific GPIO pin.
 #define IN  0
 #define OUT 1
@@ -293,6 +322,8 @@ static int gpio_read_seq_until_timeout(Pin *pin,
     return 0;
 }
  
+#if !defined(__APPLE__) // sched_setscheduler() doesn't defined on Apple devices
+
 // Used to gain maximum performance from device during
 // receiving bunch of data from sensors like DHTxx.
 static int set_max_priority(Error **err) {
@@ -320,6 +351,8 @@ static int set_default_priority(Error **err) {
     }
     return 0;
 }
+
+#endif // sched_setscheduler() doesn't defined on Apple devices
 
 typedef struct {
     int time;
@@ -364,10 +397,16 @@ static int blink_n_times(int pin, int n, Error **err) {
 // Activate DHTxx sensor and collect data sent by sensor for futher processing.
 static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
         int32_t **arr, int32_t *arr_len, Error **err) {
-    // Set maximum priority for GPIO processing.
-    if (boostPerfFlag != FALSE && -1 == set_max_priority(err)) {
-        return -1;
-    }
+    
+    #if !defined(__APPLE__)
+        // Set maximum priority for GPIO processing.
+        if (boostPerfFlag != FALSE && -1 == set_max_priority(err)) {
+            return -1;
+        }
+    #else
+        #warning "Darwin doesn't have sched_setscheduler, so parameter boostPerfFlag is useless on Apple devices"
+    #endif
+
     Pin p;
     if (-1 == gpio_export(pin, &p, err)) {
         gpio_unexport(&p, err);
@@ -415,10 +454,14 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
         set_default_priority(err);
         return -1;
     }
-    // Return normal thread priority.
-    if (boostPerfFlag != FALSE && -1 == set_default_priority(err)) {
-        return -1;
-    }
+    
+    #if !defined(__APPLE__)
+        // Return normal thread priority.
+        if (boostPerfFlag != FALSE && -1 == set_default_priority(err)) {
+            return -1;
+        }
+    #endif
+
     return 0;
 }
 
