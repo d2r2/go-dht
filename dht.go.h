@@ -431,19 +431,25 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
     Pin p;
     if (-1 == gpio_export(pin, &p, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Send dial pulse.
     if (-1 == gpio_direction(&p, OUT, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Set pin to high.
     if (-1 == gpio_write(&p, HIGH, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Sleep 500 millisecond.
@@ -451,7 +457,9 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
     // Set pin to low.
     if (-1 == gpio_write(&p, LOW, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Sleep 18 milliseconds according to DHTxx specification.
@@ -459,7 +467,9 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
     // Switch pin to input mode
     if (-1 == gpio_direction(&p, IN, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Read bunch of data from sensor
@@ -467,12 +477,16 @@ static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
     // Wait for next pulse 10ms maximum.
     if (-1 == gpio_read_seq_until_timeout(&p, 10, arr, arr_len, err)) {
         gpio_unexport(&p, err);
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     // Release pin.
     if (-1 == gpio_unexport(&p, err)) {
-        set_default_priority(err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
         return -1;
     }
     

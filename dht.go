@@ -22,14 +22,15 @@
 package dht
 
 // #include "dht.go.h"
-// #cgo LDFLAGS: -lrt
 import "C"
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
+	"syscall"
 	"time"
 	"unsafe"
 
@@ -39,7 +40,7 @@ import (
 
 type SensorType int
 
-// Implement Stringer interface.
+// String implement Stringer interface.
 func (this SensorType) String() string {
 	if this == DHT11 {
 		return "DHT11"
@@ -53,7 +54,7 @@ func (this SensorType) String() string {
 }
 
 const (
-	// Most populare sensor
+	// Most popular sensor
 	DHT11 SensorType = iota + 1
 	// More expensive and precise than DHT11
 	DHT22
@@ -61,7 +62,7 @@ const (
 	AM2302 = DHT22
 )
 
-// Keep pulse state with how long it lasted.
+// Pulse keep pulse state with how long it lasted.
 type Pulse struct {
 	Value    byte
 	Duration time.Duration
@@ -78,7 +79,7 @@ func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 	if boostPerfFlag {
 		boost = 1
 	}
-	// Return array: [pulse, duration, pulse, duration, ...]
+	// return array: [pulse, duration, pulse, duration, ...]
 	r := C.dial_DHTxx_and_read(C.int32_t(pin), boost, &arr, &arrLen, &err2)
 	if r == -1 {
 		var err error
@@ -92,13 +93,13 @@ func dialDHTxxAndGetResponse(pin int, boostPerfFlag bool) ([]Pulse, error) {
 		return nil, err
 	}
 	defer C.free(unsafe.Pointer(arr))
-	// Convert original C array arr to Go slice list
+	// convert original C array arr to Go slice list
 	h := (*reflect.SliceHeader)(unsafe.Pointer(&list))
 	h.Data = uintptr(unsafe.Pointer(arr))
 	h.Len = int(arrLen)
 	h.Cap = int(arrLen)
 	pulses := make([]Pulse, len(list)/2)
-	// Convert original int array ([pulse, duration, pulse, duration, ...])
+	// convert original int array ([pulse, duration, pulse, duration, ...])
 	// to Pulse struct array
 	for i := 0; i < len(list)/2; i++ {
 		var value byte = 0
@@ -160,32 +161,32 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 			"DHTxx sensor, since incorrect length: %d", len(pulses))
 	}
 	pulses = pulses[:80]
-	// Decode 1st byte
+	// decode 1st byte
 	b0, err := decodeByte(pulses, 0)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode 2nd byte
+	// decode 2nd byte
 	b1, err := decodeByte(pulses, 16)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode 3rd byte
+	// decode 3rd byte
 	b2, err := decodeByte(pulses, 32)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode 4th byte
+	// decode 4th byte
 	b3, err := decodeByte(pulses, 48)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Decode 5th byte: control sum to verify all data received from sensor
+	// decode 5th byte: control sum to verify all data received from sensor
 	sum, err := decodeByte(pulses, 64)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Produce data consistency check
+	// produce data consistency check
 	calcSum := byte(b0 + b1 + b2 + b3)
 	if sum != calcSum {
 		err := errors.New(spew.Sprintf(
@@ -197,9 +198,9 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 		lg.Debugf("CRCs verified: checksum from sensor(%v) = calculated checksum(%v=%v+%v+%v+%v)",
 			sum, calcSum, b0, b1, b2, b3)
 	}
-	// Debug output for 5 bytes
+	// debug output for 5 bytes
 	lg.Debugf("Decoded from DHTxx sensor: [%d, %d, %d, %d, %d]", b0, b1, b2, b3, sum)
-	// Extract temprature and humidity depending on sensor type
+	// extract temperature and humidity depending on sensor type
 	temperature, humidity = 0.0, 0.0
 	if sensorType == DHT11 {
 		humidity = float32(b0)
@@ -211,11 +212,11 @@ func decodeDHTxxPulses(sensorType SensorType, pulses []Pulse) (temperature float
 			temperature *= -1.0
 		}
 	}
-	// Additional check for data correctness
+	// additional check for data correctness
 	if humidity > 100.0 {
 		return -1, -1, fmt.Errorf("Humidity value exceed 100%%: %v", humidity)
 	}
-	// Success
+	// success
 	return temperature, humidity, nil
 }
 
@@ -230,13 +231,13 @@ func printPulseArrayForDebug(pulses []Pulse) {
 	lg.Debugf("Pulses received from DHTxx sensor: %v", pulses)
 }
 
-// Send activation request to DHTxx sensor via specific pin.
+// ReadDHTxx send activation request to DHTxx sensor via specific pin.
 // Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors.
 //
 // Input parameters:
 // 1) sensor type: DHT11, DHT22 (aka AM2302);
-// 2) pin number from GPIO connector to interract with sensor;
+// 2) pin number from GPIO connector to interact with sensor;
 // 3) boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1 (this will require root privileges).
 //
@@ -246,14 +247,14 @@ func printPulseArrayForDebug(pulses []Pulse) {
 // 3) error if present.
 func ReadDHTxx(sensorType SensorType, pin int,
 	boostPerfFlag bool) (temperature float32, humidity float32, err error) {
-	// Activate sensor and read data to pulses array
+	// activate sensor and read data to pulses array
 	pulses, err := dialDHTxxAndGetResponse(pin, boostPerfFlag)
 	if err != nil {
 		return -1, -1, err
 	}
-	// Output debug information
+	// output debug information
 	printPulseArrayForDebug(pulses)
-	// Decode pulses
+	// decode pulses
 	temp, hum, err := decodeDHTxxPulses(sensorType, pulses)
 	if err != nil {
 		return -1, -1, err
@@ -261,16 +262,16 @@ func ReadDHTxx(sensorType SensorType, pin int,
 	return temp, hum, nil
 }
 
-// Send activation request to DHTxx sensor via specific pin.
+// ReadDHTxxWithRetry send activation request to DHTxx sensor via specific pin.
 // Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors. Retry n times in case of failure.
 //
 // Input parameters:
 // 1) sensor type: DHT11, DHT22 (aka AM2302);
-// 2) pin number from gadget GPIO to interract with sensor;
+// 2) pin number from gadget GPIO to interact with sensor;
 // 3) boost GPIO performance flag should be used for old devices
 // such as Raspberry PI 1 (this will require root privileges);
-// 4) how many times to retry until success either сounter is zeroed.
+// 4) how many times to retry until success either counter is zeroed.
 //
 // Return:
 // 1) temperature in Celsius;
@@ -279,14 +280,14 @@ func ReadDHTxx(sensorType SensorType, pin int,
 // 4) error if present.
 func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 	retry int) (temperature float32, humidity float32, retried int, err error) {
-	// Create default context
+	// create default context
 	ctx := context.Background()
-	// Reroute call
+	// reroute call
 	return ReadDHTxxWithContextAndRetry(ctx, sensorType, pin,
 		boostPerfFlag, retry)
 }
 
-// Send activation request to DHTxx sensor via specific pin.
+// ReadDHTxxWithContextAndRetry send activation request to DHTxx sensor via specific pin.
 // Then decode pulses sent back with asynchronous
 // protocol specific for DHTxx sensors. Retry n times in case of failure.
 //
@@ -294,10 +295,10 @@ func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 // 1) parent context; could be used to manage life-cycle
 //  of sensor request session from code outside;
 // 2) sensor type: DHT11, DHT22 (aka AM2302);
-// 3) pin number from gadget GPIO to interract with sensor;
+// 3) pin number from gadget GPIO to interact with sensor;
 // 4) boost GPIO performance flag should be used for old devices
 //  such as Raspberry PI 1 (this will require root privileges);
-// 5) how many times to retry until success either сounter is zeroed.
+// 5) how many times to retry until success either counter is zeroed.
 //
 // Return:
 // 1) temperature in Celsius;
@@ -306,13 +307,18 @@ func ReadDHTxxWithRetry(sensorType SensorType, pin int, boostPerfFlag bool,
 // 4) error if present.
 func ReadDHTxxWithContextAndRetry(parent context.Context, sensorType SensorType, pin int,
 	boostPerfFlag bool, retry int) (temperature float32, humidity float32, retried int, err error) {
-	// Use done channel as a trigger to exit from signal waiting goroutine.
+	// create context with cancellation possibility
+	ctx, cancel := context.WithCancel(parent)
+	// use done channel as a trigger to exit from signal waiting goroutine
 	done := make(chan struct{})
 	defer close(done)
-	// Create context with cancelation possibility.
-	ctx, cancel := context.WithCancel(parent)
-	// Run goroutine waiting for OS termantion events, including keyboard Ctrl+C.
-	shell.CloseContextOnKillSignal(cancel, done)
+	// build actual signals list to control
+	signals := []os.Signal{os.Kill}
+	if shell.IsLinuxMacOSFreeBSD() {
+		signals = append(signals, syscall.SIGTERM, os.Interrupt)
+	}
+	// run goroutine waiting for OS termination events, including keyboard Ctrl+C
+	shell.CloseContextOnSignals(cancel, done, signals...)
 	retried = 0
 	for {
 		temp, hum, err := ReadDHTxx(sensorType, pin, boostPerfFlag)
@@ -322,11 +328,11 @@ func ReadDHTxxWithContextAndRetry(parent context.Context, sensorType SensorType,
 				retry--
 				retried++
 				select {
-				// Check for termination request.
+				// check for termination request
 				case <-ctx.Done():
 					// Interrupt loop, if pending termination.
 					return -1, -1, retried, ctx.Err()
-				// Sleep before new attempt 1.5 sec.
+				// sleep before new attempt 1.5 sec according to specification
 				case <-time.After(1500 * time.Millisecond):
 					continue
 				}
