@@ -313,9 +313,9 @@ func ReadDHTxxWithContextAndRetry(parent context.Context, sensorType SensorType,
 	done := make(chan struct{})
 	defer close(done)
 	// build actual signals list to control
-	signals := []os.Signal{os.Kill}
+	signals := []os.Signal{os.Kill, os.Interrupt}
 	if shell.IsLinuxMacOSFreeBSD() {
-		signals = append(signals, syscall.SIGTERM, os.Interrupt)
+		signals = append(signals, syscall.SIGTERM)
 	}
 	// run goroutine waiting for OS termination events, including keyboard Ctrl+C
 	shell.CloseContextOnSignals(cancel, done, signals...)
