@@ -21,14 +21,13 @@ func main() {
 	// Uncomment/comment next line to suppress/increase verbosity of output
 	// logger.ChangePackageLogLevel("dht", logger.InfoLevel)
 
-	sensorType := dht.DHT11
-	// Read DHT11 sensor data from pin 4, retrying 10 times in case of failure.
-	// You may enable "boost GPIO performance" parameter, if your device is old
-	// as Raspberry PI 1 (this will require root privileges). You can switch off
-	// "boost GPIO performance" parameter for old devices, but it may increase
-	// retry attempts. Play with this parameter.
+	// sensorType := dht.DHT11
+	sensorType := dht.AM2302
+	// sensorType := dht.DHT12
+	// Read DHT11 sensor data from specific pin, retrying 10 times in case of failure.
+	pin := 1
 	temperature, humidity, retried, err :=
-		dht.ReadDHTxxWithRetry(sensorType, 4, false, 10)
+		dht.ReadDHTxxWithRetry(sensorType, pin, false, 10)
 	if err != nil {
 		lg.Fatal(err)
 	}
