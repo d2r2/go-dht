@@ -1,6 +1,6 @@
 //--------------------------------------------------------------------------------------------------
 //
-// Copyright (c) 2015 Denis Dyakov
+// Copyright (c) 2015-2019 Denis Dyakov
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 // associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -36,7 +36,7 @@
 #include <time.h>
 #include <unistd.h>
 
-// Add general block to detect OS
+// Add general macro block to detect OS
 #ifdef _WIN32
    //define something for Windows (32-bit and 64-bit, this part is common)
    #ifdef _WIN64
@@ -121,7 +121,7 @@ static void free_error(Error *err) {
 //     return buffer;
 // }
 
-// Freeze thread for usec microseconds
+// Freeze thread for usec microseconds.
 static int sleep_usec(int32_t usec) {
     struct timespec tim, tim2;
     // convert microseconds to seconds
@@ -138,13 +138,13 @@ static int gpio_export(int port, Pin *pin, Error **err) {
     ssize_t bytes_written;
     int fd;
 
-    // initialize pin to work with, "direction" and "value"
-    // file descriptors with empty value
+    // Initialize pin to work with, "direction" and "value"
+    // file descriptors with empty value.
     pin->pin = -1;
     pin->fd_direction = -1;
     pin->fd_value = -1;
                  
-    fd = open("/sys/class/gpio/export", O_WRONLY);
+    fd = open("/sys/class/gpio/export", O_WRONLY|O_SYNC|O_RSYNC);
     if (-1 == fd) {
         create_error(err, "failed to open GPIO export for writing");
         return -1;
@@ -163,12 +163,12 @@ static int gpio_export(int port, Pin *pin, Error **err) {
     // under the regular user mistake occures frequently !!!
     //
     // Sleep 150 milliseconds
-    sleep_usec(150*1000);
+    // sleep_usec(150*1000);
 
     #define DIRECTION_MAX 35
     char path1[DIRECTION_MAX];
     snprintf(path1, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", pin->pin);
-    pin->fd_direction = open(path1, O_WRONLY);
+    pin->fd_direction = open(path1, O_WRONLY|O_SYNC|O_RSYNC);
     if (-1 == pin->fd_direction) {
         create_error(err, "failed to open pin %d direction for writing", pin->pin);
         return -1;
@@ -177,7 +177,7 @@ static int gpio_export(int port, Pin *pin, Error **err) {
     #define VALUE_MAX 30
     char path2[VALUE_MAX];
     snprintf(path2, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin->pin);
-    pin->fd_value = open(path2, O_RDWR);
+    pin->fd_value = open(path2, O_RDWR|O_SYNC|O_RSYNC);
     if (-1 == pin->fd_value) {
         create_error(err, "failed to open pin %d value for reading", pin->pin);
         return -1;
@@ -188,12 +188,12 @@ static int gpio_export(int port, Pin *pin, Error **err) {
 
 // Stop working with specific pin.
 static int gpio_unexport(Pin *pin, Error **err) {
-    // close "direction" file descriptor
+    // Close "direction" file descriptor.
     if (-1 != pin->fd_direction) {
         close(pin->fd_direction);
         pin->fd_direction = -1;
     }
-    // close "value" file descriptor
+    // Close "value" file descriptor.
     if (-1 != pin->fd_value) {
         close(pin->fd_value);
         pin->fd_value = -1;
@@ -204,7 +204,7 @@ static int gpio_unexport(Pin *pin, Error **err) {
         ssize_t bytes_written;
         int fd;
                  
-        fd = open("/sys/class/gpio/unexport", O_WRONLY);
+        fd = open("/sys/class/gpio/unexport", O_WRONLY|O_SYNC|O_RSYNC);
         if (-1 == fd) {
             create_error(err, "failed to open unexport for writing");
             return -1;
@@ -236,22 +236,27 @@ static int gpio_direction(Pin *pin, int dir, Error **err) {
 
 // Read data from the pin: in normal conditions return 0 or 1,
 // which correspond to low or high signal levels.
+// Experimantally found, that data might be preterminated
+// with line end ('\n').
 static int gpio_read(Pin *pin, Error **err) {
     char value_str[3];
-    if (-1 == lseek(pin->fd_value, 0, SEEK_SET)) {
-        create_error(err, "failed to seek file");
-        return -1;
-    }
-    if (-1 == read(pin->fd_value, value_str, 3)) {
+    // Seek and read in one call; use instead sequential lseek() and read().
+    if (-1 == pread(pin->fd_value, value_str, 3, 0)) {
         create_error(err, "failed to read value");
         return -1;
     }
 
-    // Small optimization to speed up GPIO processing
-    // due to ARM devices CPU slowness.
-    if (value_str[1] == '\0') {
+    // printf("bytes read: %02X:%02X:%02X\n", value_str[0], value_str[1], value_str[2]);
+
+    // Small optimization to speed up GPIO processing to skip
+    // atoi() due to ARM devices poor CPU performance.
+    if ((value_str[1] == '\0' || value_str[1] == '\n') &&
+           (value_str[0] == '0' || value_str[1] == '1')) {
         return value_str[0] == '0' ? 0:1;
     } else {
+        char *pos = strchr(value_str, '\n');
+        if (pos != NULL)
+            *pos = '\0';
         return atoi(value_str);
     }
 }
@@ -295,13 +300,13 @@ static int gpio_read_seq_until_timeout(Pin *pin,
 
     for (;;)
     {
-        // sleep_microsec(1);
         next_v = gpio_read(pin, err);
         if (-1 == next_v) {
             create_error(err, "failed to read value");
             return -1;
         }
 
+        // Check for edge trigger event.
         if (last_v != next_v) {
             clock_gettime(CLOCK_KIND, &next_t); 
             i = 0;
@@ -311,18 +316,21 @@ static int gpio_read_seq_until_timeout(Pin *pin,
                 return -1;
             }
             values[k*2] = next_v;
-            // Save time duration in microseconds.
+            // Save time duration in microseconds of last edge level.
             values[k*2-1] = convert_timespec_to_usec(next_t) -
                 convert_timespec_to_usec(last_t); 
             last_v = next_v;
             last_t = next_t;
         }
 
-        if (i++ > 20) {
-            clock_gettime(CLOCK_KIND, &next_t); 
-            if ((convert_timespec_to_usec(next_t) -
-                convert_timespec_to_usec(last_t)) / 1000 > timeout_msec) {
-                values[k*2+1] = timeout_msec * 1000;
+        // Each N cycle, without edge trigger event,
+        // try to detect expiration of timeout, to terminate processing.
+        if (i++ > 30) {
+            clock_gettime(CLOCK_KIND, &next_t);
+            int dur = convert_timespec_to_usec(next_t) -
+                convert_timespec_to_usec(last_t);
+            if (dur / 1000 > timeout_msec) {
+                values[k*2+1] = dur;
                 break;
             }
         }
@@ -342,6 +350,7 @@ static int gpio_read_seq_until_timeout(Pin *pin,
     }*/
     return 0;
 }
+ 
  
 #if !defined(__APPLE__) // sched_setscheduler() doesn't defined on Apple devices
 
@@ -375,10 +384,89 @@ static int set_default_priority(Error **err) {
 
 #endif // sched_setscheduler() doesn't defined on Apple devices
 
-typedef struct {
-    int time;
-    int edge;
-} edge_info;
+
+// Activate DHTxx sensor and collect data sent by sensor for futher processing.
+static int dial_DHTxx_and_read(int32_t pin, int32_t handshakeDurUsec,
+        int32_t boostPerfFlag, int32_t **arr, int32_t *arr_len, Error **err) {
+    
+    #if !defined(__APPLE__)
+        // Set maximum priority for GPIO processing.
+        if (boostPerfFlag != FALSE && -1 == set_max_priority(err)) {
+            return -1;
+        }
+    #else
+        #warning "Darwin doesn't have sched_setscheduler, so parameter boostPerfFlag is useless on Apple devices"
+    #endif
+
+    Pin p;
+    if (-1 == gpio_export(pin, &p, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Send dial pulse.
+    if (-1 == gpio_direction(&p, OUT, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Set pin to low.
+    if (-1 == gpio_write(&p, LOW, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Sleep N microseconds.
+    sleep_usec(handshakeDurUsec); 
+    // Set pin to high.
+    if (-1 == gpio_write(&p, HIGH, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Switch pin to input mode
+    if (-1 == gpio_direction(&p, IN, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Read bunch of data from sensor
+    // for futher processing in high level language.
+    // Wait for next pulse 10ms maximum.
+    if (-1 == gpio_read_seq_until_timeout(&p, 15, arr, arr_len, err)) {
+        gpio_unexport(&p, err);
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    // Release pin.
+    if (-1 == gpio_unexport(&p, err)) {
+        #if !defined(__APPLE__)
+            set_default_priority(err);
+        #endif            
+        return -1;
+    }
+    
+    #if !defined(__APPLE__)
+        // Return normal thread priority.
+        if (boostPerfFlag != FALSE && -1 == set_default_priority(err)) {
+            return -1;
+        }
+    #endif
+
+    return 0;
+}
 
 
 // Blink specific pin n times. Led could be
@@ -415,89 +503,6 @@ static int blink_n_times(int pin, int n, Error **err) {
     return gpio_unexport(&p, err);
 }
 
-// Activate DHTxx sensor and collect data sent by sensor for futher processing.
-static int dial_DHTxx_and_read(int32_t pin, int32_t boostPerfFlag,
-        int32_t **arr, int32_t *arr_len, Error **err) {
-    
-    #if !defined(__APPLE__)
-        // Set maximum priority for GPIO processing.
-        if (boostPerfFlag != FALSE && -1 == set_max_priority(err)) {
-            return -1;
-        }
-    #else
-        #warning "Darwin doesn't have sched_setscheduler, so parameter boostPerfFlag is useless on Apple devices"
-    #endif
 
-    Pin p;
-    if (-1 == gpio_export(pin, &p, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Send dial pulse.
-    if (-1 == gpio_direction(&p, OUT, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Set pin to high.
-    if (-1 == gpio_write(&p, HIGH, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Sleep 500 millisecond.
-    sleep_usec(500*1000); 
-    // Set pin to low.
-    if (-1 == gpio_write(&p, LOW, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Sleep 18 milliseconds according to DHTxx specification.
-    sleep_usec(18*1000); 
-    // Switch pin to input mode
-    if (-1 == gpio_direction(&p, IN, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Read bunch of data from sensor
-    // for futher processing in high level language.
-    // Wait for next pulse 10ms maximum.
-    if (-1 == gpio_read_seq_until_timeout(&p, 10, arr, arr_len, err)) {
-        gpio_unexport(&p, err);
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    // Release pin.
-    if (-1 == gpio_unexport(&p, err)) {
-        #if !defined(__APPLE__)
-            set_default_priority(err);
-        #endif            
-        return -1;
-    }
-    
-    #if !defined(__APPLE__)
-        // Return normal thread priority.
-        if (boostPerfFlag != FALSE && -1 == set_default_priority(err)) {
-            return -1;
-        }
-    #endif
-
-    return 0;
-}
 
 #endif
