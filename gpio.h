@@ -163,7 +163,7 @@ static int gpio_export(int port, Pin *pin, Error **err) {
     // under the regular user mistake occures frequently !!!
     //
     // Sleep 150 milliseconds
-    // sleep_usec(150*1000);
+    sleep_usec(150*1000);
 
     #define DIRECTION_MAX 35
     char path1[DIRECTION_MAX];
