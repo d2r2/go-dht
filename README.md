@@ -16,7 +16,7 @@ All sensors supported by this library communicate with Raspberry PI via "single-
 
 So here is my recommendation - if you want to control sensors and peripheral devices from Golang environment running on Linux OS, go and buy sensors with **I2C interface**. I personally support such sensors in my hobby projects via [I2C library](https://github.com/d2r2/go-i2c) (you can go and find list of supported devices in the middle).
 
-But if you want to teach how signal processing algorithm attempt to work with "sinlge-wire digital interface" from not real time user code layer, go and find out!
+But if you want to learn how signal processing algorithm attempt to work with "sinlge-wire digital interface" from not real time user code layer, go and find it!
 
 About
 -----
