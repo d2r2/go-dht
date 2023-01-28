@@ -133,7 +133,7 @@ static int sleep_usec(int32_t usec) {
 
 // Start working with specific pin.
 static int gpio_export(int port, Pin *pin, Error **err) {
-    #define BUFFER_MAX 3
+    #define BUFFER_MAX 6
     char buffer[BUFFER_MAX];
     ssize_t bytes_written;
     int fd;
@@ -165,7 +165,7 @@ static int gpio_export(int port, Pin *pin, Error **err) {
     // Sleep 150 milliseconds
     // sleep_usec(150*1000);
 
-    #define DIRECTION_MAX 35
+    #define DIRECTION_MAX 36
     char path1[DIRECTION_MAX];
     snprintf(path1, DIRECTION_MAX, "/sys/class/gpio/gpio%d/direction", pin->pin);
     pin->fd_direction = open(path1, O_WRONLY|O_SYNC|O_RSYNC);
@@ -174,7 +174,7 @@ static int gpio_export(int port, Pin *pin, Error **err) {
         return -1;
     }
                              
-    #define VALUE_MAX 30
+    #define VALUE_MAX 32
     char path2[VALUE_MAX];
     snprintf(path2, VALUE_MAX, "/sys/class/gpio/gpio%d/value", pin->pin);
     pin->fd_value = open(path2, O_RDWR|O_SYNC|O_RSYNC);
